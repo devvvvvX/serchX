@@ -238,6 +238,12 @@ cargo test --test serchx100_benchmark
 
 ---
 
+## Contributing
+
+Contributions are welcome! Please review [CONTRIBUTING.md](CONTRIBUTING.md) for our code of conduct, development setup, benchmark workflows, and architectural guidelines.
+
+---
+
 ## License
 
 MIT License. See [LICENSE](LICENSE) for details.
