@@ -1,0 +1,8 @@
+html, body { margin: 0; height: 100%; background: transparent; overscroll-behavior: none; }
+body { font: 13px/16px var(--font); color: var(--label); -webkit-font-smoothing: antialiased;
+       user-select: none; cursor: default; }
+a { cursor: pointer; }
+input, textarea, .selectable { user-select: text; cursor: text; }
+:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 50%, transparent); outline-offset: 0; }
+[data-tauri-drag-region] { -webkit-app-region: drag; }
+@media (prefers-reduced-transparency: reduce) { body.launcher { background: var(--window-bg); } }

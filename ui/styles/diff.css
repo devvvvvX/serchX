@@ -1,0 +1,322 @@
+/* Version Diff Inspector Styles */
+
+#diff-view {
+  display: none;
+  flex-direction: column;
+  height: 456px;
+  max-height: 456px;
+  background: var(--bg-surface);
+  overflow: hidden;
+}
+
+#diff-view.active {
+  display: flex;
+}
+
+/* Header Action Bar */
+.diff-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 var(--space-md);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.diff-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  overflow: hidden;
+}
+
+.diff-back-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 4px 8px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-badge);
+  color: var(--text-secondary);
+  font-size: var(--font-label);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.diff-back-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.diff-title-wrapper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.diff-file-name {
+  font-size: var(--font-heading);
+  font-weight: var(--weight-semibold);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.diff-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-shrink: 0;
+}
+
+.diff-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-badge);
+  font-size: var(--font-label);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.diff-action-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.diff-action-btn.pinned {
+  background: var(--badge-diff-add-bg);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: var(--badge-diff-add);
+}
+
+/* Timeline Scrubber */
+.diff-timeline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(24, 24, 28, 0.95);
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+  gap: var(--space-md);
+}
+
+.timeline-track-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex: 1;
+  overflow-x: auto;
+  padding: 4px 0;
+}
+
+.timeline-version-dot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: var(--radius-badge);
+  transition: background 0.12s ease;
+}
+
+.timeline-version-dot:hover {
+  background: var(--bg-hover);
+}
+
+.timeline-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  border: 2px solid var(--bg-surface);
+  transition: all 0.12s ease;
+}
+
+.timeline-version-dot.active-a .timeline-dot {
+  background: var(--color-destructive);
+  box-shadow: 0 0 6px var(--color-destructive);
+}
+
+.timeline-version-dot.active-b .timeline-dot {
+  background: var(--badge-diff-add);
+  box-shadow: 0 0 6px var(--badge-diff-add);
+}
+
+.timeline-label {
+  font-size: 10px;
+  font-weight: var(--weight-semibold);
+  color: var(--text-muted);
+}
+
+.timeline-version-dot.active-a .timeline-label,
+.timeline-version-dot.active-b .timeline-label {
+  color: var(--text-primary);
+}
+
+.timeline-quick-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-shrink: 0;
+}
+
+.timeline-quick-btn {
+  padding: 2px 6px;
+  background: transparent;
+  border: 1px solid var(--border-subtle);
+  border-radius: 3px;
+  font-size: 11px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.timeline-quick-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.timeline-quick-btn.active {
+  background: var(--color-accent-subtle);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+/* Diff Stats Summary Bar */
+.diff-stats-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 4px var(--space-md);
+  background: rgba(18, 18, 20, 0.9);
+  border-bottom: 1px solid var(--border-subtle);
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+.stat-added {
+  color: var(--badge-diff-add);
+}
+
+.stat-removed {
+  color: var(--badge-diff-remove);
+}
+
+/* Diff Content Viewer */
+.diff-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-xs) 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.45;
+  background: #0d0d10;
+}
+
+.diff-line {
+  display: flex;
+  align-items: flex-start;
+  min-height: 20px;
+  padding: 0 var(--space-sm);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.diff-line:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.diff-line-num {
+  width: 44px;
+  min-width: 44px;
+  color: rgba(255, 255, 255, 0.25);
+  text-align: right;
+  padding-right: var(--space-sm);
+  user-select: none;
+  font-size: 11px;
+}
+
+.diff-line-marker {
+  width: 16px;
+  min-width: 16px;
+  text-align: center;
+  user-select: none;
+  font-weight: 600;
+}
+
+.diff-line-text {
+  flex: 1;
+  color: var(--text-secondary);
+}
+
+/* Added Line */
+.diff-line-added {
+  background: rgba(16, 185, 129, 0.12);
+}
+
+.diff-line-added .diff-line-marker,
+.diff-line-added .diff-line-text {
+  color: #34d399;
+}
+
+.diff-line-added .diff-line-num {
+  color: rgba(52, 211, 153, 0.5);
+}
+
+/* Removed Line */
+.diff-line-removed {
+  background: rgba(239, 68, 68, 0.12);
+}
+
+.diff-line-removed .diff-line-marker,
+.diff-line-removed .diff-line-text {
+  color: #f87171;
+}
+
+.diff-line-removed .diff-line-num {
+  color: rgba(248, 113, 113, 0.5);
+}
+
+/* Collapsed Block Chip */
+.diff-collapsed-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px var(--space-md);
+  margin: 4px var(--space-md);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-badge);
+  font-size: 11px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.12s ease;
+  user-select: none;
+}
+
+.diff-collapsed-block:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.diff-empty-notice {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: var(--text-muted);
+  font-size: var(--font-body);
+}

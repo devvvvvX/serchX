@@ -1,0 +1,97 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tauri-apps/tauri/dev/crates/tauri-cli/schema.json",
+  "productName": "serchX",
+  "version": "0.1.0",
+  "identifier": "com.serchx.desktop",
+  "build": {
+    "frontendDist": "../ui"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "macOSPrivateApi": true,
+    "windows": [
+      {
+        "label": "main",
+        "title": "serchX",
+        "width": 680,
+        "height": 64,
+        "resizable": false,
+        "decorations": false,
+        "transparent": true,
+        "shadow": true,
+        "alwaysOnTop": true,
+        "center": true,
+        "visible": false,
+        "skipTaskbar": true,
+        "windowEffects": { "effects": ["hudWindow"], "state": "active", "radius": 30 }
+      },
+      {
+        "label": "settings",
+        "title": "serchX Settings",
+        "width": 720,
+        "height": 520,
+        "minWidth": 640,
+        "minHeight": 440,
+        "resizable": true,
+        "decorations": true,
+        "transparent": false,
+        "center": true,
+        "visible": false,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "trafficLightPosition": { "x": 20, "y": 22 },
+        "url": "settings.html"
+      },
+      {
+        "label": "compare",
+        "title": "Compare Versions",
+        "width": 900,
+        "height": 600,
+        "minWidth": 640,
+        "minHeight": 400,
+        "resizable": true,
+        "decorations": true,
+        "transparent": false,
+        "center": true,
+        "visible": false,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "url": "compare.html"
+      },
+      {
+        "label": "onboarding",
+        "title": "Welcome to serchX",
+        "width": 660,
+        "height": 540,
+        "resizable": false,
+        "decorations": true,
+        "transparent": false,
+        "center": true,
+        "visible": false,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "url": "onboarding.html"
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["app", "dmg"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "macOS": {
+      "minimumSystemVersion": "12.0",
+      "dmg": {
+        "background": null
+      }
+    }
+  }
+}

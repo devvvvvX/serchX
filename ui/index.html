@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>serchX</title>
+  <script>window.addEventListener('contextmenu', (e) => e.preventDefault(), true);</script>
+  <link rel="stylesheet" href="styles/tokens.css">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/spotlight.css">
+</head>
+
+<body>
+  <div id="app">
+    <!-- Apple Intelligence Multi-Layer Glow Stack -->
+    <!-- <div id="ai-glow-stack" class="ai-glow-layer-stack" aria-hidden="true">
+      <div class="ai-glow-ambient"></div>
+      <div class="ai-glow-medium"></div>
+      <div class="ai-glow-edge"></div>
+      <div class="ai-glow-inner"></div>
+      <div class="ai-travel-highlight"></div>
+      <div class="ai-cursor-highlight"></div>
+    </div> -->
+
+    <!-- Top Search Header (Spotlight Idle Bar: 64px) -->
+    <header id="search-header" data-tauri-drag-region>
+      <div class="search-icon-wrapper" data-tauri-drag-region aria-hidden="true" title="Drag to move">
+        <svg class="search-icon-default" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <svg class="search-icon-ai" width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path
+            d="M12 2C12.3 6.5 15.5 9.7 20 10C15.5 10.3 12.3 13.5 12 18C11.7 13.5 8.5 10.3 4 10C8.5 9.7 11.7 6.5 12 2Z" />
+          <path
+            d="M19 15C19.2 17.2 20.8 18.8 23 19C20.8 19.2 19.2 20.8 19 23C18.8 20.8 17.2 19.2 15 19C17.2 18.8 18.8 17.2 19 15Z"
+            opacity="0.85" />
+        </svg>
+      </div>
+
+      <input id="search-input" type="text" placeholder="Search files or ask anything..." autocomplete="off"
+        autocorrect="off" autocapitalize="off" spellcheck="false" autofocus />
+
+      <div class="header-actions">
+        <div id="search-spinner" class="search-spinner" aria-label="Loading results" role="status"></div>
+
+        <button id="clear-btn" class="icon-btn" style="display: none;" aria-label="Clear query" title="Clear (Esc)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+
+        <button id="settings-toggle-btn" class="icon-btn" aria-label="Settings" title="Settings (⌘,)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+            </path>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Search View (Expanded) -->
+    <main id="search-view">
+      <div id="list-column">
+        <div id="synthesis-card" class="synthesis-card" style="display: none;">
+          <div class="ai-glow-layer-stack synthesis-glow" aria-hidden="true">
+            <div class="ai-glow-ambient"></div>
+            <div class="ai-glow-medium"></div>
+            <div class="ai-glow-edge"></div>
+            <div class="ai-glow-inner"></div>
+            <div class="ai-travel-highlight"></div>
+          </div>
+          <div class="synthesis-header">
+            <div class="synthesis-title-wrapper">
+              <svg class="synthesis-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <path
+                  d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+              </svg>
+              <span class="synthesis-title">Synthesis</span>
+              <div id="synthesis-model-info" class="synthesis-info-trigger" style="display: none;" tabindex="0" role="button" aria-label="Model Information">
+                <svg class="synthesis-info-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <div class="synthesis-info-tooltip" role="tooltip">
+                  <div class="info-tooltip-header">
+                    <div class="info-tooltip-prov-wrap">
+                      <span class="info-tooltip-dot"></span>
+                      <span id="info-tooltip-provider" class="info-tooltip-provider">Local</span>
+                    </div>
+                    <span class="info-tooltip-private">100% Private</span>
+                  </div>
+                  <div class="info-tooltip-divider"></div>
+                  <div class="info-tooltip-row">
+                    <span class="info-tooltip-label">Model</span>
+                    <span id="info-tooltip-model" class="info-tooltip-value mono">Default</span>
+                  </div>
+                  <div id="info-tooltip-ram-row" class="info-tooltip-row" style="display: none;">
+                    <span class="info-tooltip-label">Model RAM</span>
+                    <span id="info-tooltip-ram" class="info-tooltip-value mono" style="color: #34c759; font-weight: 600;"></span>
+                  </div>
+                  <div id="info-tooltip-endpoint-row" class="info-tooltip-row" style="display: none;">
+                    <span class="info-tooltip-label">Endpoint</span>
+                    <span id="info-tooltip-endpoint" class="info-tooltip-value mono"></span>
+                  </div>
+                </div>
+              </div>
+              <span id="synthesis-status-badge" class="synthesis-badge">Generating...</span>
+            </div>
+            <div class="synthesis-actions">
+              <button id="synthesis-copy-btn" class="icon-btn small" title="Copy Answer (⌘C)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" />
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                </svg>
+              </button>
+              <button id="synthesis-close-btn" class="icon-btn small" title="Dismiss (Esc)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          <div id="synthesis-sources-row" class="synthesis-sources-row"></div>
+          <div id="synthesis-content" class="synthesis-content"></div>
+        </div>
+        <div id="results-list" role="listbox" aria-label="Search results"></div>
+        <div id="empty-state" role="status" data-tauri-drag-region>
+          <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <h2 class="empty-state-title">No Results</h2>
+          <p class="empty-state-body">Check the spelling or try a different time or folder.</p>
+        </div>
+      </div>
+      <div id="preview-column">
+        <button id="preview-pin-btn" class="icon-btn preview-pin-btn" title="Toggle Pin (⌘P)">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path
+              d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.36a.5.5 0 0 0 .622.622l4.36-1.32a2 2 0 0 0 .83-.5ZM8 15h.01M11 15h.01M14 15h.01M17 15h.01M11 12h.01M14 12h.01M17 12h.01M14 9h.01M17 9h.01M17 6h.01" />
+          </svg>
+        </button>
+        <div class="preview-top">
+          <div class="preview-icon" id="preview-icon"></div>
+          <div class="preview-title" id="preview-title">Document</div>
+          <div class="preview-path" id="preview-path">~/Documents/...</div>
+        </div>
+        <div class="preview-section">
+          <div class="preview-section-title">Why this result</div>
+          <div id="preview-evidence"></div>
+        </div>
+        <div class="preview-section">
+          <div class="preview-section-title">Information</div>
+          <div id="preview-info"></div>
+        </div>
+        <div class="preview-actions">
+          <button id="preview-open-btn" class="preview-btn primary">Open</button>
+          <button id="preview-reveal-btn" class="preview-btn">Reveal in Finder</button>
+          <button id="preview-compare-btn" class="preview-btn">Compare Versions</button>
+          <button id="preview-summarize-btn" class="preview-btn">Summarize</button>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Footer Shortcuts & Status -->
+    <footer id="app-footer" data-tauri-drag-region>
+      <div class="shortcut-group" aria-label="Keyboard shortcuts">
+        <span class="shortcut-item"><span class="kbd-badge">Tab</span> Synthesize</span>
+        <span class="shortcut-item"><span class="kbd-badge">⏎</span> Open</span>
+        <span class="shortcut-item"><span class="kbd-badge">⌘⏎</span> Reveal in Finder</span>
+        <span class="shortcut-item"><span class="kbd-badge">⌘D</span> Compare</span>
+        <span class="shortcut-item"><span class="kbd-badge">⌘P</span> Pin</span>
+      </div>
+      <div class="footer-status-wrapper">
+        <span id="footer-status-dot" class="footer-status-dot" style="display: none; width: 6px; height: 6px; border-radius: 50%; margin-right: 6px; background: var(--accent);"></span>
+        <span id="footer-status-text" class="footer-status-text">Ready</span>
+        <button id="footer-pause-crawl-btn" style="display: none; margin-left: 8px; background: rgba(255, 255, 255, 0.08); border: 0.5px solid var(--separator); color: var(--label); border-radius: 4px; padding: 1px 7px; font-size: 10px; cursor: pointer;" title="Pause Indexing">⏸ Pause</button>
+        <button id="footer-resume-crawl-btn" style="display: none; margin-left: 8px; background: rgba(52, 199, 89, 0.15); border: 0.5px solid rgba(52, 199, 89, 0.3); color: #34c759; border-radius: 4px; padding: 1px 7px; font-size: 10px; cursor: pointer;" title="Resume Indexing">▶ Resume</button>
+      </div>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked@13/marked.min.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+
+</html>

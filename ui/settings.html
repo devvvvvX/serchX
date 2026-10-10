@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>serchX Settings</title>
+  <script>window.addEventListener('contextmenu', (e) => e.preventDefault(), true);</script>
+  <link rel="stylesheet" href="styles/tokens.css">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/settings-app.css">
+</head>
+
+<body>
+  <div class="settings-shell" data-tauri-drag-region>
+    <!-- Left Sidebar -->
+    <aside class="settings-sidebar" data-tauri-drag-region>
+      <div data-tauri-drag-region>
+        <div class="sidebar-header" data-tauri-drag-region>
+          <div class="brand-row" data-tauri-drag-region>
+            <div class="brand-icon" data-tauri-drag-region>S</div>
+            <span class="brand-title" data-tauri-drag-region>serchX</span>
+          </div>
+          <span class="brand-badge" data-tauri-drag-region>macOS • CoreML Local AI</span>
+        </div>
+
+        <nav class="sidebar-nav">
+          <button class="nav-item active" data-tab="neural-engine">
+            <span class="nav-icon icon-blue">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+              </svg>
+            </span>
+            <span>Neural Engine & AI</span>
+          </button>
+          <button class="nav-item" data-tab="watched-sources">
+            <span class="nav-icon icon-green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+              </svg>
+            </span>
+            <span>Watched Sources</span>
+          </button>
+          <button class="nav-item" data-tab="analytics">
+            <span class="nav-icon icon-orange">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="20" x2="18" y2="10" />
+                <line x1="12" y1="20" x2="12" y2="4" />
+                <line x1="6" y1="20" x2="6" y2="14" />
+              </svg>
+            </span>
+            <span>Analytics & Storage</span>
+          </button>
+          <button class="nav-item" data-tab="retrieval-tuning">
+            <span class="nav-icon icon-purple">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="4" y1="21" x2="4" y2="14" />
+                <line x1="4" y1="10" x2="4" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="12" />
+                <line x1="12" y1="8" x2="12" y2="3" />
+                <line x1="20" y1="21" x2="20" y2="16" />
+                <line x1="20" y1="12" x2="20" y2="3" />
+                <circle cx="4" cy="12" r="2" />
+                <circle cx="12" cy="10" r="2" />
+                <circle cx="20" cy="14" r="2" />
+              </svg>
+            </span>
+            <span>Retrieval Tuning</span>
+          </button>
+          <button class="nav-item" data-tab="system-hotkeys">
+            <span class="nav-icon icon-gray">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+            </span>
+            <span>System & Hotkeys</span>
+          </button>
+          <button class="nav-item" data-tab="diagnostics">
+            <span class="nav-icon icon-indigo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10 9 9 9 8 9" />
+              </svg>
+            </span>
+            <span>Diagnostics & Logs</span>
+          </button>
+        </nav>
+      </div>
+
+      <div class="sidebar-footer" data-tauri-drag-region>
+        <div class="system-status-indicator" data-tauri-drag-region>
+          <div class="status-dot pulsing" data-tauri-drag-region></div>
+          <span id="sidebar-engine-status" data-tauri-drag-region>Engine Active • 100% Local</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Panel -->
+    <main class="settings-main">
+      <header class="main-header" data-tauri-drag-region>
+        <div class="header-titles" data-tauri-drag-region>
+          <h1 id="section-title" data-tauri-drag-region>Neural Engine & AI</h1>
+          <p id="section-subtitle" data-tauri-drag-region>Local neural embeddings and on-device machine intelligence</p>
+        </div>
+        <div class="header-right" data-tauri-drag-region>
+          <div id="telemetry-meters-header" class="telemetry-meters" data-tauri-drag-region>
+            <div id="telemetry-item-ram" class="telemetry-meter-item"
+              title="Process Resident RAM (RSS): Physical memory pages currently mapped by SerchX. Empty KV cache pages and untouched model weights are faulted into RAM on demand as tokens are generated."
+              data-tauri-drag-region>
+              <span class="meter-label" data-tauri-drag-region>RAM</span>
+              <span id="meter-ram" class="meter-value" data-tauri-drag-region>-- MB</span>
+            </div>
+            <div id="telemetry-item-metal" class="telemetry-meter-item"
+              title="Metal Unified Memory: Model weights + 2,048 KV cache buffer capacity (~256 MB) allocated on Apple Silicon Unified Memory. Can exceed idle Process RAM because cache pages are mapped into RAM on demand."
+              data-tauri-drag-region>
+              <span class="meter-label" data-tauri-drag-region>METAL</span>
+              <span id="meter-metal" class="meter-value" data-tauri-drag-region>0 MB</span>
+            </div>
+            <div id="telemetry-item-cpu" class="telemetry-meter-item" title="Process CPU Usage" data-tauri-drag-region>
+              <span class="meter-label" data-tauri-drag-region>CPU</span>
+              <span id="meter-cpu" class="meter-value" data-tauri-drag-region>0.0%</span>
+            </div>
+            <div id="telemetry-item-db" class="telemetry-meter-item" title="SQLite Database Footprint"
+              data-tauri-drag-region>
+              <span class="meter-label" data-tauri-drag-region>DB</span>
+              <span id="meter-storage" class="meter-value" data-tauri-drag-region>-- MB</span>
+            </div>
+          </div>
+          <div id="save-status-pill" class="save-pill" data-tauri-drag-region>✓ Saved</div>
+        </div>
+      </header>
+
+      <section class="main-content">
+        <!-- 1. Neural Engine & AI View -->
+        <div id="view-neural-engine" class="content-section active">
+          <!-- Hardware Acceleration Banner -->
+          <div class="telemetry-banner">
+            <div class="telemetry-left">
+              <div class="telemetry-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="4" y="4" width="16" height="16" rx="2" />
+                  <rect x="9" y="9" width="6" height="6" />
+                  <line x1="9" y1="1" x2="9" y2="4" />
+                  <line x1="15" y1="1" x2="15" y2="4" />
+                  <line x1="9" y1="20" x2="9" y2="23" />
+                  <line x1="15" y1="20" x2="15" y2="23" />
+                  <line x1="20" y1="9" x2="23" y2="9" />
+                  <line x1="20" y1="14" x2="23" y2="14" />
+                  <line x1="1" y1="9" x2="4" y2="9" />
+                  <line x1="1" y1="14" x2="4" y2="14" />
+                </svg>
+              </div>
+              <div class="telemetry-text">
+                <h3>Apple Silicon Neural Engine Active</h3>
+                <p>Embeddings computed on Metal GPU &amp; Neural Engine with zero cloud egress</p>
+              </div>
+            </div>
+            <span class="telemetry-tag">Metal • ONNX Runtime</span>
+          </div>
+
+          <!-- Model & Memory Telemetry -->
+          <div class="card">
+            <div class="card-title-row">
+              <span class="card-title">Vector Index &amp; Embedding Telemetry</span>
+            </div>
+            <div class="metrics-row">
+              <div class="metric-box">
+                <span class="metric-label">Embedding Model</span>
+                <span class="metric-value" style="font-size: 13px;">AllMiniLML6V2</span>
+              </div>
+              <div class="metric-box">
+                <span class="metric-label">Embedding Vector Dims</span>
+                <span class="metric-value">384-d L2</span>
+              </div>
+              <div class="metric-box">
+                <span class="metric-label">Search Latency (P95)</span>
+                <span class="metric-value" id="telemetry-latency">&lt; 15 ms</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sensitivity Presets -->
+          <div class="card">
+            <div class="card-title-row">
+              <span class="card-title">Semantic Sensitivity Presets</span>
+            </div>
+            <p class="card-desc">Choose how serchX blends semantic vector concepts with exact keyword matching.</p>
+
+            <div class="preset-grid">
+              <div class="preset-card active" data-preset="balanced">
+                <div class="preset-name">Balanced</div>
+                <div class="preset-desc">Recommended for general desktop search. Equal weight on words and concepts.
+                </div>
+              </div>
+              <div class="preset-card" data-preset="light">
+                <div class="preset-name">Keywords First</div>
+                <div class="preset-desc">Prioritizes exact string matches and filename codes over conceptual vectors.
+                </div>
+              </div>
+              <div class="preset-card" data-preset="power">
+                <div class="preset-name">Neural Deep</div>
+                <div class="preset-desc">High vector recall for descriptive queries ("tax return from last summer").
+                </div>
+              </div>
+              <div class="preset-card" data-preset="custom">
+                <div class="preset-name">Custom</div>
+                <div class="preset-desc">Manually configure individual ranking weights in Retrieval Tuning.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Local LLM Server Configuration -->
+          <div class="card" style="margin-top: 14px;">
+            <div class="card-title-row">
+              <span class="card-title">LLM Provider Configuration</span>
+            </div>
+            <p class="card-desc">Configure the local API endpoint for LLM synthesis. serchX supports native execution or
+              connecting to local inference servers.</p>
+
+            <div class="settings-group">
+              <div class="setting-row">
+                <div class="setting-label">
+                  <span>Active Provider</span>
+                  <small>Select which backend serchX uses to run local models</small>
+                </div>
+                <select id="select-llm-provider" class="text-input"
+                  style="width: 210px; height: 26px; font-size: 12px;">
+                  <option value="native">Native Metal (Apple Silicon / CPU)</option>
+                  <option value="lm_studio">LM Studio (v1 API)</option>
+                  <option value="ollama">Ollama</option>
+                  <option value="openai_compat">OpenAI Compatible (Local)</option>
+                  <option value="anthropic_compat">Anthropic Compatible (Local)</option>
+                </select>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-label">
+                  <span>Endpoint URL</span>
+                  <small id="llm-endpoint-status-hint">The local address for the selected provider (localhost
+                    only)</small>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                  <input type="text" id="input-llm-endpoint" class="text-input"
+                    style="width: 190px; height: 26px; font-size: 12px; font-family: var(--mono);"
+                    placeholder="http://127.0.0.1:1234">
+                  <button id="btn-detect-endpoints" class="btn btn-secondary"
+                    style="height: 26px; padding: 0 10px; font-size: 11px;">Detect Services</button>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-label">
+                  <span>Show Thinking Process</span>
+                  <small>Stream live reasoning steps for thinking models (e.g. Qwen, DeepSeek)</small>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="toggle-show-thinking" checked>
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-label">
+                  <span>Context Window Length</span>
+                  <small>Maximum tokens for native Metal inference</small>
+                </div>
+                <select id="select-context-length" class="select-input"
+                  style="width: 230px; height: 26px; font-size: 11px;">
+                  <option value="2048">2,048 tokens (Minimal RAM, fastest)</option>
+                  <option value="4096">4,096 tokens (Recommended — balanced)</option>
+                  <option value="8192">8,192 tokens (Extended context)</option>
+                  <option value="16384">16,384 tokens (Max — large unified RAM)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Local LLM Synthesis Models -->
+          <div class="card" style="margin-top: 14px;">
+            <div class="card-title-row">
+              <span class="card-title">Local LLM Synthesis Models</span>
+              <span id="llm-hardware-badge" class="brand-badge" style="margin: 0;">Detecting hardware...</span>
+            </div>
+            <p class="card-desc">Download and select on-device language models for local evidence synthesis and document
+              summaries. 100% private with zero cloud egress.</p>
+
+            <!-- Top telemetry summary: Total Downloaded Models Size and Model RAM consumption -->
+            <div id="llm-models-summary-bar" class="settings-group"
+              style="padding: 10px 14px; margin-bottom: 12px; display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; background: rgba(255, 255, 255, 0.03);">
+              <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                <div style="display: flex; flex-direction: column; gap: 2px;">
+                  <span
+                    style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--label-2); font-weight: 500;">Downloaded
+                    Models Storage</span>
+                  <span id="llm-total-downloaded-size" style="font-size: 13px; font-weight: 600; color: var(--label);">0
+                    B</span>
+                </div>
+                <div id="llm-ram-consumption-container"
+                  style="display: flex; padding-left: 16px; border-left: 0.5px solid var(--separator); flex-direction: column; gap: 2px;">
+                  <div style="display: flex; align-items: center; gap: 6px;">
+                    <span
+                      style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--label-2); font-weight: 500;">Model
+                      RAM Consumption</span>
+                    <span id="llm-ram-info-icon" class="info-help-icon"
+                      style="display: inline-flex; align-items: center; justify-content: center; cursor: help; color: var(--label-3);"
+                      title="Metal Unified Memory reserves the model weights plus ~256 MB KV cache capacity (2,048 tokens). Live Process RAM only maps physical pages into memory on demand during token generation.">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="16" x2="12" y2="12" />
+                        <line x1="12" y1="8" x2="12.01" y2="8" />
+                      </svg>
+                    </span>
+                    <span id="llm-ram-status-tag" class="telemetry-tag"
+                      style="background: rgba(142, 142, 147, 0.15); color: var(--label-2); font-size: 9px; padding: 1px 5px;">On
+                      Demand</span>
+                  </div>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <span id="llm-ram-consumption-value"
+                      style="font-size: 13px; font-weight: 600; color: var(--label);">0 B (on demand)</span>
+                    <button id="btn-unload-model-ram" class="btn btn-secondary"
+                      style="height: 20px; padding: 0 8px; font-size: 10px;"
+                      title="Load active model into memory">Load</button>
+                  </div>
+                </div>
+              </div>
+              <div id="llm-downloaded-count-tag" class="telemetry-tag" style="font-size: 11px;">0 downloaded</div>
+            </div>
+
+            <!-- Explanatory note explaining Metal vs Resident RAM -->
+            <div id="llm-memory-info-note"
+              style="display: flex; align-items: flex-start; gap: 8px; padding: 9px 12px; margin-bottom: 12px; background: rgba(0, 122, 255, 0.05); border: 0.5px solid rgba(0, 122, 255, 0.18); border-radius: 8px; font-size: 11px; line-height: 1.45; color: var(--label-2);">
+              <svg style="width: 14px; height: 14px; flex-shrink: 0; margin-top: 1.5px; color: var(--accent);"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+              <span>
+                <strong style="color: var(--label); font-weight: 500;">Memory Architecture Note:</strong>
+                <span id="llm-memory-info-text">Metal Unified Memory reserves the model weights plus a <span
+                    id="llm-context-length-tokens">4,096</span>-token context cache buffer (~<span
+                    id="llm-context-cache-size">1 GB</span>) upfront. Live Process RAM (RSS) reflects active physical
+                  memory pages in use; untouched weights and empty KV cache pages are faulted into RAM on demand as
+                  tokens are generated. As a result, Metal allocation can exceed idle Process RAM.</span>
+              </span>
+            </div>
+
+            <div id="llm-download-container"
+              style="display: none; padding: 12px; margin-bottom: 12px; background: var(--group-bg); border-radius: 8px; border: 0.5px solid var(--separator);">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                <span id="llm-download-title"
+                  style="font-size: 13px; font-weight: 500; color: var(--label);">Downloading model...</span>
+                <span id="llm-download-stats"
+                  style="font-size: 11px; color: var(--label-2); font-variant-numeric: tabular-nums;">0% • 0 MB/s</span>
+              </div>
+              <div
+                style="width: 100%; height: 6px; background: var(--fill-tertiary); border-radius: 3px; overflow: hidden;">
+                <div id="llm-download-bar"
+                  style="width: 0%; height: 100%; background: var(--accent); transition: width 150ms ease, background 300ms ease;">
+                </div>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                <span id="llm-download-eta" style="font-size: 11px; color: var(--label-3);">Estimating time...</span>
+                <div style="display: flex; gap: 6px;">
+                  <button id="btn-pause-llm-download" class="btn btn-secondary"
+                    style="height: 24px; padding: 0 10px; font-size: 11px;">Pause</button>
+                  <button id="btn-resume-llm-download" class="btn btn-secondary"
+                    style="display: none; height: 24px; padding: 0 10px; font-size: 11px; background: rgba(52, 199, 89, 0.15); color: #34c759;">Resume</button>
+                  <button id="btn-cancel-llm-download" class="btn btn-secondary"
+                    style="height: 24px; padding: 0 10px; font-size: 11px; color: #ff453a;">Cancel</button>
+                </div>
+              </div>
+            </div>
+
+            <div id="llm-models-list" class="settings-group" style="padding: 4px;">
+              <!-- Dynamically populated model items -->
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-top: 12px; align-items: center; flex-wrap: wrap;">
+              <button id="btn-reveal-models-dir" class="btn btn-secondary">Open Models Folder</button>
+              <button id="btn-import-gguf" class="btn btn-secondary">Import File / Folder...</button>
+              <div style="display: flex; gap: 6px; align-items: center; margin-left: auto;">
+                <input type="text" id="input-import-path" placeholder="Paste .gguf file or model folder path..."
+                  class="input" style="width: 250px; font-size: 11px; padding: 4px 8px; height: 26px;">
+                <button id="btn-import-path-submit" class="btn btn-primary"
+                  style="height: 26px; padding: 0 10px; font-size: 11px;">Import</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Watched Sources View -->
+        <div id="view-watched-sources" class="content-section">
+          <!-- Indexing Engine Table Card -->
+          <div class="card" id="indexing-engine-card">
+            <div class="card-title-row" style="align-items: center; gap: 10px; flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;">
+                <span id="queue-pulse-dot"
+                  style="width: 8px; height: 8px; border-radius: 50%; background: var(--fill-secondary); flex-shrink: 0; transition: background 0.3s;"></span>
+                <span class="card-title">Indexing Engine</span>
+                <span id="queue-status-label"
+                  style="font-size: 11px; color: var(--label-2); font-weight: 400; margin-left: 2px;">Idle</span>
+                <span id="queue-progress-badge"
+                  style="font-size: 11px; color: var(--label-3); font-variant-numeric: tabular-nums;"></span>
+              </div>
+              <div style="display: flex; gap: 6px; align-items: center; flex-shrink: 0;">
+                <button id="btn-pause-crawl" class="btn btn-secondary"
+                  style="display: none; align-items: center; gap: 5px; height: 26px; padding: 0 10px; font-size: 11px;"
+                  title="Pause all indexing">
+                  <span>⏸</span> Pause All
+                </button>
+                <button id="btn-resume-crawl" class="btn btn-secondary"
+                  style="display: none; align-items: center; gap: 5px; height: 26px; padding: 0 10px; font-size: 11px; background: rgba(52, 199, 89, 0.15); color: #34c759; border-color: rgba(52, 199, 89, 0.35);"
+                  title="Resume all indexing">
+                  <span>▶</span> Resume All
+                </button>
+                <button id="btn-rescan-all" class="btn btn-secondary"
+                  style="height: 26px; padding: 0 10px; font-size: 11px;">Re-scan All</button>
+                <button id="btn-clean-db-reindex-sources" class="btn btn-danger"
+                  style="height: 26px; padding: 0 10px; font-size: 11px;">Clean DB &amp; Re-index</button>
+              </div>
+            </div>
+
+            <!-- Folders table -->
+            <div style="overflow: hidden; border-top: 0.5px solid var(--separator);">
+              <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                <thead>
+                  <tr style="background: var(--fill-quaternary);">
+                    <th
+                      style="padding: 6px 14px; text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--label-2); width: 40%;">
+                      Folder</th>
+                    <th
+                      style="padding: 6px 8px; text-align: center; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--label-2); width: 80px;">
+                      Status</th>
+                    <th
+                      style="padding: 6px 8px; text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--label-2);">
+                      Progress</th>
+                    <th
+                      style="padding: 6px 8px; text-align: right; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--label-2); width: 72px;">
+                      ETA</th>
+                    <th
+                      style="padding: 6px 14px; text-align: right; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--label-2); width: 90px;">
+                      Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="indexing-folders-tbody">
+                  <tr>
+                    <td colspan="5" id="indexing-table-empty-row"
+                      style="padding: 18px 14px; text-align: center; color: var(--label-2); font-size: 12px;">No folders
+                      indexing — queue is idle</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Active file ticker -->
+            <div id="active-file-ticker-row"
+              style="display: none; padding: 6px 14px; border-top: 0.5px solid var(--separator); font-size: 11px; color: var(--label-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: var(--fill-quaternary);">
+              <span style="color: var(--label-3); margin-right: 6px; font-size: 10px;">▸</span><span
+                id="active-file-ticker"></span>
+            </div>
+
+            <!-- Overall progress bar -->
+            <div id="queue-progress-bar-container"
+              style="display: none; padding: 8px 14px; border-top: 0.5px solid var(--separator);">
+              <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                <span id="queue-progress-stats"
+                  style="font-size: 11px; color: var(--label-2); font-variant-numeric: tabular-nums;">0 / 0 files</span>
+                <span id="queue-progress-percent"
+                  style="font-size: 11px; color: var(--label-2); font-variant-numeric: tabular-nums;">0%</span>
+              </div>
+              <div
+                style="width: 100%; height: 4px; background: var(--fill-tertiary); border-radius: 2px; overflow: hidden;">
+                <div id="queue-progress-bar-fill"
+                  style="width: 0%; height: 100%; background: var(--accent); transition: width 150ms ease;"></div>
+              </div>
+            </div>
+
+            <!-- Recent events drawer -->
+            <div style="border-top: 0.5px solid var(--separator);">
+              <button id="btn-toggle-queue-drawer"
+                style="display: flex; align-items: center; gap: 6px; width: 100%; background: transparent; border: none; padding: 7px 14px; color: var(--label-2); font-size: 11px; cursor: pointer; text-align: left;">
+                <span id="queue-drawer-icon"
+                  style="display: inline-block; transition: transform 0.2s; font-size: 9px;">▶</span>
+                <span id="queue-drawer-toggle-label">Recent Files (0)</span>
+              </button>
+              <div id="queue-drawer-content" style="display: none;">
+                <div style="padding: 0 14px 12px;">
+                  <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                    <thead>
+                      <tr style="border-bottom: 0.5px solid var(--separator);">
+                        <th
+                          style="padding: 4px 6px 4px 0; text-align: left; color: var(--label-2); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px;">
+                          Type</th>
+                        <th
+                          style="padding: 4px 6px; text-align: left; color: var(--label-2); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px;">
+                          File</th>
+                        <th
+                          style="padding: 4px 6px; text-align: right; color: var(--label-2); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px;">
+                          Size</th>
+                        <th
+                          style="padding: 4px 0 4px 6px; text-align: right; color: var(--label-2); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px;">
+                          Status</th>
+                      </tr>
+                    </thead>
+                    <tbody id="recent-stream-tbody">
+                      <tr>
+                        <td colspan="4" class="queue-empty-text">Waiting for indexing activity...</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          <!-- Delete Queue Card -->
+          <div class="card" id="delete-queue-card" style="margin-top: 14px; display: none;">
+            <div class="card-title-row" style="align-items: center; gap: 10px; flex-wrap: wrap;">
+              <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;">
+                <span id="dq-pulse-dot"
+                  style="width: 8px; height: 8px; border-radius: 50%; background: var(--red); flex-shrink: 0; animation: queuePulse 1.2s ease-in-out infinite;"></span>
+                <span class="card-title">Delete Queue</span>
+                <span id="dq-status-label"
+                  style="font-size: 11px; color: var(--label-2); font-weight: 400; margin-left: 2px;">Running</span>
+              </div>
+            </div>
+            <div style="overflow: hidden; border-top: 0.5px solid var(--separator);">
+              <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                <thead>
+                  <tr style="background: var(--fill-quaternary);">
+                    <th
+                      style="padding: 6px 14px; text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--label-2); width: 40%;">
+                      Operation</th>
+                    <th
+                      style="padding: 6px 8px; text-align: center; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--label-2); width: 80px;">
+                      Status</th>
+                    <th
+                      style="padding: 6px 8px; text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--label-2);">
+                      Progress</th>
+                    <th
+                      style="padding: 6px 14px; text-align: right; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: var(--label-2); width: 130px;">
+                      Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="delete-queue-tbody">
+                  <tr>
+                    <td colspan="4"
+                      style="padding: 18px 14px; text-align: center; color: var(--label-2); font-size: 12px;">No delete
+                      operations running</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Post-stop requeue modal -->
+          <div id="dq-requeue-modal" class="modal-overlay" style="display: none;">
+            <div class="modal-card" style="max-width: 420px;">
+              <div class="modal-header">
+                <h3 class="modal-title">Delete Stopped</h3>
+                <button id="dq-requeue-modal-close" class="btn-icon-only" title="Close">✕</button>
+              </div>
+              <div class="modal-body">
+                <p class="modal-desc">The delete job was stopped before it finished. Some index data may still remain.
+                </p>
+                <div class="modal-folder-target" style="margin: 10px 0;">
+                  <span id="dq-requeue-modal-label" class="folder-path">—</span>
+                </div>
+                <p class="modal-subtext">Would you like to re-enable monitoring and re-scan this folder?</p>
+              </div>
+              <div class="modal-actions">
+                <button id="dq-requeue-modal-dismiss" class="btn btn-secondary">Dismiss</button>
+                <button id="dq-requeue-modal-requeue" class="btn btn-primary">Re-monitor &amp; Re-index</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Watched Folders List -->
+          <div class="card" style="margin-top: 14px;">
+            <div class="card-title-row">
+              <span class="card-title">Monitored Folders</span>
+              <span id="folder-count-badge" class="brand-badge" style="margin: 0;">0 folders</span>
+            </div>
+            <p class="card-desc">Folders monitored by the real-time FileWatcher. New, edited, and renamed files are
+              ingested continuously.</p>
+
+            <div class="settings-group"
+              style="border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: none;">
+              <div id="watched-folders-list" class="folders-list">
+                <!-- Dynamically populated folder cards -->
+              </div>
+            </div>
+            <div
+              style="display: flex; background: var(--group-bg); border: 0.5px solid var(--separator); border-radius: 0 0 10px 10px; height: 26px;">
+              <button id="btn-add-folder"
+                style="flex: 1; background: transparent; border: none; border-right: 0.5px solid var(--separator); color: var(--label); cursor: default; font-size: 14px;">+</button>
+              <button id="btn-remove-folder"
+                style="flex: 1; background: transparent; border: none; color: var(--label); cursor: default; font-size: 14px;">−</button>
+            </div>
+          </div>
+
+          <!-- Blacklisted Folders Card -->
+          <div class="card blacklist-card" style="margin-top: 20px;">
+            <div class="card-title-row">
+              <span class="card-title">Blacklisted Folders</span>
+              <span id="blacklist-count-badge" class="brand-badge" style="margin: 0;">0 blacklisted</span>
+            </div>
+            <p class="card-desc">Indexing is skipped for these directory paths and all nested subfolders.</p>
+
+            <div class="settings-group"
+              style="border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: none;">
+              <div id="blacklist-folders-list" class="folders-list">
+                <!-- Dynamically populated blacklist cards -->
+              </div>
+            </div>
+            <div
+              style="display: flex; background: var(--group-bg); border: 0.5px solid var(--separator); border-radius: 0 0 10px 10px; height: 26px;">
+              <button id="btn-add-blacklist"
+                style="flex: 1; background: transparent; border: none; border-right: 0.5px solid var(--separator); color: var(--label); cursor: default; font-size: 14px;">+</button>
+              <button id="btn-remove-blacklist"
+                style="flex: 1; background: transparent; border: none; color: var(--label); cursor: default; font-size: 14px;">−</button>
+            </div>
+          </div>
+
+          <!-- Dead Letter Queue (Failed Files) Card -->
+          <div class="card dlq-card" style="margin-top: 20px;">
+            <div class="card-title-row">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="card-title">Failed Files (Dead Letter Queue)</span>
+                <span id="dlq-count-badge" class="brand-badge"
+                  style="margin: 0; background: rgba(255, 69, 58, 0.15); color: #ff453a;">0 failed</span>
+              </div>
+              <div style="display: flex; gap: 6px; margin-left: auto;">
+                <button id="btn-refresh-dlq" class="btn btn-secondary" style="font-size: 11px; padding: 4px 8px;"
+                  title="Refresh failed files list">↻ Refresh</button>
+                <button id="btn-clear-dlq" class="btn btn-secondary"
+                  style="font-size: 11px; padding: 4px 8px; color: var(--red);"
+                  title="Clear all failed file records">Clear All</button>
+              </div>
+            </div>
+            <p class="card-desc">Files that could not be processed due to timeouts, corrupt formatting, or extraction
+              errors. You can inspect the root cause, retry indexing, or dismiss individual items.</p>
+
+            <div class="settings-group" style="padding: 0; overflow: hidden;">
+              <div id="dlq-items-list" class="dlq-list" style="max-height: 240px; overflow-y: auto;">
+                <div class="queue-empty-text"
+                  style="padding: 16px; text-align: center; color: var(--label-2); font-size: 12px;">No failed files.
+                  All files processed successfully.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Analytics & Storage View -->
+        <div id="view-analytics" class="content-section">
+          <!-- 4 Top Cards -->
+          <div class="analytics-metrics-grid">
+            <div class="analytics-metric-card">
+              <div class="analytics-card-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+              </div>
+              <div class="analytics-card-meta">
+                <div class="analytics-card-label">Total Documents</div>
+                <div id="analytics-total-files" class="analytics-card-val">0</div>
+              </div>
+            </div>
+            <div class="analytics-metric-card">
+              <div class="analytics-card-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <ellipse cx="12" cy="5" rx="9" ry="3" />
+                  <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+                  <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+                </svg>
+              </div>
+              <div class="analytics-card-meta">
+                <div class="analytics-card-label">Data Indexed</div>
+                <div id="analytics-total-bytes" class="analytics-card-val">0 MB</div>
+              </div>
+            </div>
+            <div class="analytics-metric-card">
+              <div class="analytics-card-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="7" height="7" />
+                  <rect x="14" y="3" width="7" height="7" />
+                  <rect x="14" y="14" width="7" height="7" />
+                  <rect x="3" y="14" width="7" height="7" />
+                </svg>
+              </div>
+              <div class="analytics-card-meta">
+                <div class="analytics-card-label">Search Chunks</div>
+                <div id="analytics-total-chunks" class="analytics-card-val">0</div>
+              </div>
+            </div>
+            <div class="analytics-metric-card">
+              <div class="analytics-card-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                </svg>
+              </div>
+              <div class="analytics-card-meta">
+                <div class="analytics-card-label">Top Category</div>
+                <div id="analytics-top-category" class="analytics-card-val">—</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category Breakdown & Extension Accordion -->
+          <div class="card" style="margin-top: 14px;">
+            <div class="card-title-row">
+              <span class="card-title">Filetype &amp; Extension Distribution</span>
+              <span class="brand-badge" style="margin: 0;">Click row for details</span>
+            </div>
+            <p class="card-desc">Breakdown of indexed files grouped by category. Click any category row to reveal
+              independent file extensions, chunk contributions, and byte volume.</p>
+
+            <div id="analytics-categories-accordion" class="categories-accordion">
+              <!-- Dynamically populated category accordion items -->
+            </div>
+          </div>
+
+          <!-- Storage Section Breakdown -->
+          <div class="card" style="margin-top: 14px;">
+            <div class="card-title-row">
+              <span class="card-title">Storage Footprint by Section</span>
+            </div>
+            <p class="card-desc">Comparative breakdown of internal storage consumed by SQLite FTS5 lexical index, text
+              chunks, and vector embeddings.</p>
+
+            <div class="storage-stacked-bar-container">
+              <div class="storage-stacked-bar">
+                <div id="bar-storage-sqlite" class="stacked-bar-segment segment-sqlite" style="width: 50%;"
+                  title="SQLite FTS5"></div>
+                <div id="bar-storage-chunks" class="stacked-bar-segment segment-chunks" style="width: 30%;"
+                  title="Chunks Text"></div>
+                <div id="bar-storage-vectors" class="stacked-bar-segment segment-vectors" style="width: 20%;"
+                  title="Vectors"></div>
+              </div>
+            </div>
+
+            <div class="storage-legend-grid">
+              <div class="storage-legend-item">
+                <div class="legend-dot dot-sqlite"></div>
+                <div class="legend-info">
+                  <span class="legend-title">SQLite Database</span>
+                  <span id="legend-val-sqlite" class="legend-bytes">0 MB</span>
+                </div>
+              </div>
+              <div class="storage-legend-item">
+                <div class="legend-dot dot-chunks"></div>
+                <div class="legend-info">
+                  <span class="legend-title">Text Chunks</span>
+                  <span id="legend-val-chunks" class="legend-bytes">0 MB</span>
+                </div>
+              </div>
+              <div class="storage-legend-item">
+                <div class="legend-dot dot-vectors"></div>
+                <div class="legend-info">
+                  <span class="legend-title">Vector Embeddings</span>
+                  <span id="legend-val-vectors" class="legend-bytes">0 MB</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Retrieval Tuning View -->
+        <div id="view-retrieval-tuning" class="content-section">
+          <div class="card">
+            <div class="card-title-row">
+              <span class="card-title">Hybrid Fusion Balance (RRF)</span>
+              <button id="btn-reset-tuning" class="btn btn-secondary" style="font-size: 11px;">Reset Defaults</button>
+            </div>
+            <p class="card-desc">Adjust the balance between SQLite FTS5 lexical keyword scoring and Vector cosine
+              distance.</p>
+            <div class="settings-group">
+              <div class="setting-row">
+                <div class="setting-label">
+                  <span>Vector Semantic Weight</span>
+                  <small>Higher values surface conceptual matches without exact keywords</small>
+                </div>
+                <div class="slider-container">
+                  <input type="range" id="slider-vector-weight" min="0" max="100" value="50">
+                  <span class="slider-val" id="val-vector-weight">50%</span>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-label">
+                  <span>Keyword Exact Weight</span>
+                  <small>Higher values prioritize exact word-for-word string occurrences</small>
+                </div>
+                <div class="slider-container">
+                  <input type="range" id="slider-keyword-weight" min="0" max="100" value="50">
+                  <span class="slider-val" id="val-keyword-weight">50%</span>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-label">
+                  <span>Reciprocal Rank Fusion Constant (k)</span>
+                  <small>Smoothing parameter for rank score combination (Default: 60)</small>
+                </div>
+                <div class="slider-container">
+                  <input type="range" id="slider-rrf-k" min="10" max="100" value="60">
+                  <span class="slider-val" id="val-rrf-k">60</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 14px;">
+            <div class="card-title-row">
+              <span class="card-title">Storage &amp; Ingestion Limits</span>
+            </div>
+            <div class="settings-group">
+              <div class="setting-row">
+                <div class="setting-label">
+                  <span>Maximum File Size</span>
+                  <small>Files larger than this limit are skipped during crawling (Default: 10 MB)</small>
+                </div>
+                <div class="slider-container">
+                  <input type="range" id="slider-max-size" min="1" max="50" value="10">
+                  <span class="slider-val" id="val-max-size">10 MB</span>
+                </div>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-label">
+                  <span>Version History Retention</span>
+                  <small>Number of days previous file revisions are retained in database (Default: 7 days)</small>
+                </div>
+                <div class="slider-container">
+                  <input type="range" id="slider-retention" min="1" max="30" value="7">
+                  <span class="slider-val" id="val-retention">7 days</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. System & Hotkeys View -->
+        <div id="view-system-hotkeys" class="content-section">
+          <div class="card">
+            <div class="card-title-row">
+              <span class="card-title">System Shortcut</span>
+            </div>
+            <div class="settings-group">
+              <div class="setting-row">
+                <div class="setting-label">
+                  <span>Global Spotlight Launcher Shortcut</span>
+                  <small>Native macOS shortcut to toggle the floating serchX search bar</small>
+                </div>
+                <input type="text" id="input-global-hotkey" class="text-input" placeholder="Shift+Command+Space"
+                  style="width: 170px; text-align: center; font-family: var(--mono); font-size: 12px;">
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 14px;">
+            <div class="card-title-row">
+              <span class="card-title">Indexing Performance</span>
+            </div>
+            <div class="settings-group">
+              <div class="setting-row">
+                <div class="setting-label">
+                  <span>Max Indexing Threads</span>
+                  <small>Number of parallel CPU threads to use during folder crawling</small>
+                </div>
+                <div class="slider-group">
+                  <input type="range" id="slider-indexing-threads" min="1" max="16" step="1" value="4">
+                  <span id="val-indexing-threads" class="slider-value">4 threads</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 14px;">
+            <div class="card-title-row">
+              <span class="card-title">Window Behavior &amp; Positioning</span>
+            </div>
+            <div class="settings-group">
+              <div class="setting-row">
+                <div class="setting-label">
+                  <span>Dismiss on Focus Loss</span>
+                  <small>Automatically hides the search bar when clicking outside</small>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" id="toggle-auto-hide" checked>
+                  <span class="switch-slider"></span>
+                </label>
+              </div>
+
+              <div class="setting-row">
+                <div class="setting-label">
+                  <span>Launcher Placement</span>
+                  <small>Reset search bar coordinates to the display center</small>
+                </div>
+                <button id="btn-center-window" class="btn btn-secondary">Center on Screen</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 14px;">
+            <div class="card-title-row">
+              <span class="card-title" style="color: var(--red);">Maintenance &amp; Database Reset</span>
+            </div>
+            <p class="card-desc">Safely optimize local SQLite storage, prune expired versions, or completely reset the
+              database and re-index all files from scratch.</p>
+
+            <div style="display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap;">
+              <button id="btn-prune-versions" class="btn btn-secondary">Prune Expired Versions</button>
+              <button id="btn-reindex-all" class="btn btn-danger">Clean DB &amp; Re-index All</button>
+              <button id="btn-factory-reset" class="btn btn-secondary"
+                style="color: var(--red); border-color: rgba(255, 59, 48, 0.35);">Factory Reset Everything</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6. Diagnostics & Logs View -->
+        <div id="view-diagnostics" class="content-section">
+          <!-- Telemetry Diagnostics Banner -->
+          <div class="telemetry-banner">
+            <div class="telemetry-left">
+              <div class="telemetry-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                </svg>
+              </div>
+              <div class="telemetry-text">
+                <h3>App Logs &amp; System Diagnostics</h3>
+                <p>Non-blocking rolling logs stored in <code>~/.serchx/logs/serchx.log</code> with auto-rotation (10MB
+                  limit)</p>
+              </div>
+            </div>
+            <div class="diagnostics-header-actions">
+              <span class="telemetry-tag" id="log-count-tag">0 entries</span>
+            </div>
+          </div>
+
+          <!-- Action Toolbar Card -->
+          <div class="card" style="margin-top: 14px;">
+            <div class="diagnostics-toolbar">
+              <div class="diagnostics-toolbar-left">
+                <div class="log-filter-group">
+                  <span class="log-filter-label">Level:</span>
+                  <select id="log-filter-level" class="log-level-select">
+                    <option value="ALL">All Levels</option>
+                    <option value="INFO">INFO</option>
+                    <option value="WARN">WARN</option>
+                    <option value="ERROR">ERROR</option>
+                    <option value="DEBUG">DEBUG</option>
+                  </select>
+                </div>
+                <input type="text" id="log-search-input" class="log-search-input"
+                  placeholder="Filter log messages..." />
+              </div>
+              <div class="diagnostics-toolbar-right">
+                <button id="btn-refresh-logs" class="btn btn-secondary" title="Fetch latest log events">Refresh</button>
+                <button id="btn-copy-logs" class="btn btn-secondary" title="Copy log text to clipboard">Copy</button>
+                <button id="btn-export-logs" class="btn btn-secondary" title="Export logs file">Export</button>
+                <button id="btn-reveal-logs" class="btn btn-secondary"
+                  title="Reveal logs folder in Finder">Reveal</button>
+                <button id="btn-clear-logs" class="btn btn-secondary" title="Clear current viewer window">Clear</button>
+              </div>
+            </div>
+
+            <!-- Terminal Log Viewer Card -->
+            <div class="card-title-row" style="margin-top: 10px;">
+              <span class="card-title">Live App Log Stream</span>
+              <div class="log-terminal-controls">
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--label-2);">
+                  <input type="checkbox" id="toggle-log-autoscroll" checked />
+                  <span>Auto-scroll</span>
+                </label>
+                <span id="log-status-indicator" class="brand-badge" style="margin: 0;">Connected</span>
+              </div>
+            </div>
+            <div class="log-terminal-container">
+              <div class="log-terminal-inner">
+                <div class="log-table-header">
+                  <span class="log-th-num">#</span>
+                  <span class="log-th-time">Time</span>
+                  <span class="log-th-level">Level</span>
+                  <span class="log-th-target">Target</span>
+                  <span class="log-th-msg">Message</span>
+                </div>
+                <div class="log-viewer-terminal" id="log-viewer-terminal">
+                  <div class="log-empty-state">Loading application logs...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal Dialog for Folder Removal & Data Purging -->
+  <div id="folder-action-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-folder-title" class="modal-title">Remove Watched Folder</h3>
+        <button id="modal-btn-close" class="btn-icon-only" title="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="modal-folder-message" class="modal-desc">
+          Do you also want to remove already indexed data for this folder?
+        </p>
+        <div class="modal-folder-target">
+          <span class="folder-icon">📂</span>
+          <span id="modal-folder-path" class="folder-path">—</span>
+        </div>
+        <p id="modal-folder-subtext" class="modal-subtext">
+          Removing indexed data will delete all search chunks, text tokens, and vector embeddings created from files in
+          this folder.
+        </p>
+      </div>
+      <div class="modal-actions">
+        <button id="modal-btn-cancel" class="btn btn-secondary">Cancel</button>
+        <button id="modal-btn-keep-index" class="btn btn-secondary">Remove Watchlist Only</button>
+        <button id="modal-btn-purge-data" class="btn btn-danger">Remove &amp; Delete Index Data</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Dialog for Database Reset & Re-indexing -->
+  <div id="reset-database-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="reset-modal-title" class="modal-title" style="color: var(--red);">Reset Database &amp; Clean Index</h3>
+        <button id="reset-modal-btn-close" class="btn-icon-only" title="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">
+          Are you sure you want to clean the entire SQLite search database and re-index all files?
+        </p>
+        <div class="modal-folder-target"
+          style="border-color: rgba(255, 59, 48, 0.3); background: rgba(255, 59, 48, 0.06);">
+          <span class="folder-icon">⚠️</span>
+          <span class="folder-path" style="color: var(--red); font-weight: 500;">Permanently deletes all indexed chunks,
+            text tokens, and vector embeddings</span>
+        </div>
+        <p class="modal-subtext">
+          Choose <strong>Clean DB &amp; Re-index All</strong> to wipe the search database and automatically re-scan all
+          your watched folders from scratch.<br />
+          Choose <strong>Factory Reset</strong> to also clear watched folders and restore application defaults.
+        </p>
+      </div>
+      <div class="modal-actions">
+        <button id="reset-modal-btn-cancel" class="btn btn-secondary">Cancel</button>
+        <button id="reset-modal-btn-factory" class="btn btn-secondary"
+          style="color: var(--red); border-color: rgba(255, 59, 48, 0.35);">Factory Reset</button>
+        <button id="reset-modal-btn-clean-reindex" class="btn btn-danger">Clean DB &amp; Re-index All</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Dialog for Model Deletion -->
+  <div id="model-delete-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="modal-model-title" class="modal-title" style="color: var(--red);">Delete Model</h3>
+        <button id="modal-model-btn-close" class="btn-icon-only" title="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="modal-model-message" class="modal-desc">
+          Are you sure you want to permanently delete this model from disk?
+        </p>
+        <div class="modal-folder-target"
+          style="border-color: rgba(255, 59, 48, 0.3); background: rgba(255, 59, 48, 0.06);">
+          <span class="folder-icon">🗑️</span>
+          <span id="modal-model-name" class="folder-path" style="color: var(--red); font-weight: 500;">—</span>
+        </div>
+        <p id="modal-model-subtext" class="modal-subtext">
+          Reclaims <strong id="modal-model-size">—</strong> of disk storage. You can re-download this model at any time.
+        </p>
+      </div>
+      <div class="modal-actions">
+        <button id="modal-model-btn-cancel" class="btn btn-secondary">Cancel</button>
+        <button id="modal-model-btn-confirm" class="btn btn-danger">Delete Model</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Dialog for Pre-Index Folder Analysis (Option A) -->
+  <div id="folder-analysis-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-card" style="max-width: 520px; width: 90%;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <h3 class="modal-title">Folder Analysis</h3>
+          <span id="analysis-duration-pill" class="brand-badge"
+            style="margin: 0; font-size: 10px; background: rgba(10, 132, 255, 0.12); color: var(--accent);">Scanning...</span>
+        </div>
+        <button id="analysis-modal-btn-close" class="btn-icon-only" title="Close">✕</button>
+      </div>
+
+      <div class="modal-body" style="padding: 16px 20px;">
+        <div class="modal-folder-target" style="margin-bottom: 16px;">
+          <span class="folder-icon">📂</span>
+          <span id="analysis-modal-folder-path" class="folder-path" style="font-weight: 500;">—</span>
+        </div>
+
+        <!-- Scanning spinner state -->
+        <div id="analysis-loading-state"
+          style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 0; gap: 12px;">
+          <div class="search-spinner" style="display: block; width: 24px; height: 24px; border-width: 2.5px;"></div>
+          <span style="font-size: 12px; color: var(--label-2);">Analyzing directory structure &amp; file types...</span>
+        </div>
+
+        <!-- Loaded Content State -->
+        <div id="analysis-content-state" style="display: none;">
+          <!-- Top KPI Cards -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;">
+            <div
+              style="background: var(--fill-tertiary); border: 0.5px solid var(--separator); border-radius: 8px; padding: 10px 12px;">
+              <div style="font-size: 11px; color: var(--label-2); margin-bottom: 2px;">Indexable Files</div>
+              <div style="font-size: 16px; font-weight: 600; color: var(--label);" id="analysis-total-files">0 files
+              </div>
+              <div style="font-size: 11px; color: var(--label-3);" id="analysis-total-size">0 MB</div>
+            </div>
+            <div
+              style="background: rgba(52, 199, 89, 0.08); border: 0.5px solid rgba(52, 199, 89, 0.25); border-radius: 8px; padding: 10px 12px;">
+              <div style="font-size: 11px; color: #34c759; margin-bottom: 2px; font-weight: 500;">Estimated Indexing
+                Time</div>
+              <div style="font-size: 16px; font-weight: 600; color: #34c759;" id="analysis-estimated-time">~0s</div>
+              <div style="font-size: 11px; color: var(--label-3);" id="analysis-eta-subtext">Optimized throughput</div>
+            </div>
+          </div>
+
+          <!-- Breakdown List -->
+          <div
+            style="background: var(--fill-quaternary); border: 0.5px solid var(--separator); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px;">
+            <div
+              style="font-size: 11px; font-weight: 600; color: var(--label-2); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+              Content Breakdown</div>
+
+            <!-- Documents -->
+            <div
+              style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 0.5px solid var(--separator); font-size: 12px;">
+              <span style="display: flex; align-items: center; gap: 6px; color: var(--label);">
+                <span>📄</span> Documents <span style="font-size: 10px; color: var(--label-3);">(PDF, DOCX, TXT)</span>
+              </span>
+              <span style="color: var(--label-2); font-variant-numeric: tabular-nums;" id="analysis-row-docs">0 files (0
+                MB)</span>
+            </div>
+
+            <!-- Images -->
+            <div
+              style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 0.5px solid var(--separator); font-size: 12px;">
+              <span style="display: flex; align-items: center; gap: 6px; color: var(--label);">
+                <span>🖼️</span> Images / OCR <span style="font-size: 10px; color: var(--label-3);">(Vision OCR)</span>
+              </span>
+              <span style="color: var(--label-2); font-variant-numeric: tabular-nums;" id="analysis-row-images">0 files
+                (0 MB)</span>
+            </div>
+
+            <!-- Code -->
+            <div
+              style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 0.5px solid var(--separator); font-size: 12px;">
+              <span style="display: flex; align-items: center; gap: 6px; color: var(--label);">
+                <span>💻</span> Code &amp; Scripts <span style="font-size: 10px; color: var(--label-3);">(Source
+                  files)</span>
+              </span>
+              <span style="color: var(--label-2); font-variant-numeric: tabular-nums;" id="analysis-row-code">0 files (0
+                MB)</span>
+            </div>
+
+            <!-- Data -->
+            <div
+              style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 0.5px solid var(--separator); font-size: 12px;">
+              <span style="display: flex; align-items: center; gap: 6px; color: var(--label);">
+                <span>📊</span> Data &amp; Sheets <span style="font-size: 10px; color: var(--label-3);">(JSON, CSV,
+                  YAML)</span>
+              </span>
+              <span style="color: var(--label-2); font-variant-numeric: tabular-nums;" id="analysis-row-data">0 files (0
+                MB)</span>
+            </div>
+
+            <!-- Skipped -->
+            <div
+              style="display: flex; justify-content: space-between; align-items: center; padding: 5px 0; font-size: 12px;">
+              <span style="display: flex; align-items: center; gap: 6px; color: var(--label-3);">
+                <span>🚫</span> Skipped / Non-indexable <span style="font-size: 10px; color: var(--label-3);">(Binaries,
+                  .git, temp)</span>
+              </span>
+              <span style="color: var(--label-3); font-variant-numeric: tabular-nums;" id="analysis-row-skipped">0
+                files</span>
+            </div>
+          </div>
+
+          <p class="modal-subtext" style="margin: 0; font-size: 11px; color: var(--label-3);">
+            Files will be monitored continuously. You can pause or cancel indexing at any time.
+          </p>
+        </div>
+      </div>
+
+      <div class="modal-actions" style="padding: 12px 20px; display: flex; justify-content: flex-end; gap: 8px;">
+        <button id="analysis-modal-btn-cancel" class="mac-btn mac-btn-secondary"
+          style="height: 26px; padding: 0 14px; font-size: 12px;">Close</button>
+        <button id="analysis-modal-btn-confirm" class="mac-btn mac-btn-primary"
+          style="height: 26px; padding: 0 14px; font-size: 12px;">
+          <svg width="8" height="9" viewBox="0 0 8 9" fill="currentColor" aria-hidden="true">
+            <path d="M1 1.2a.5.5 0 0 1 .76-.43l5.5 3.3a.5.5 0 0 1 0 .86l-5.5 3.3A.5.5 0 0 1 1 7.8V1.2z" />
+          </svg>
+          <span>Start Indexing</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="settings.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,142 @@
+/* compare.css - macOS System Settings / Xcode pattern */
+
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--window-bg);
+}
+
+#compare-app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.compare-header {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 0.5px solid var(--separator);
+  background: transparent;
+  flex-shrink: 0;
+}
+
+.header-left, .header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+.header-right {
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+.header-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 2;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+#diff-file-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--label);
+  margin: 0;
+  padding-left: 64px; /* avoid traffic lights */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.version-picker {
+  background: var(--fill-tertiary);
+  border: 0.5px solid var(--separator);
+  border-radius: 6px;
+  color: var(--label);
+  font-size: 12px;
+  padding: 2px 6px;
+  height: 22px;
+}
+.compare-vs {
+  font-size: 11px;
+  color: var(--label-2);
+}
+
+.segmented-control {
+  display: flex;
+  background: var(--fill-tertiary);
+  border-radius: 6px;
+  padding: 2px;
+  border: 0.5px solid var(--separator);
+}
+.segment {
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  padding: 2px 10px;
+  font-size: 11px;
+  color: var(--label);
+  cursor: default;
+}
+.segment.active {
+  background: var(--content-bg);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+}
+
+.diff-stats-bar {
+  display: flex;
+  gap: 16px;
+  padding: 8px 16px;
+  background: var(--content-bg);
+  border-bottom: 0.5px solid var(--separator);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--label-2);
+}
+.stat-added { color: var(--green); }
+.stat-removed { color: var(--red); }
+
+.diff-content {
+  flex: 1;
+  overflow: auto;
+  background: var(--content-bg);
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.compare-footer {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 16px;
+  gap: 8px;
+  border-top: 0.5px solid var(--separator);
+  background: var(--window-bg);
+  flex-shrink: 0;
+}
+.btn {
+  height: 24px;
+  padding: 0 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  border: 0.5px solid var(--separator);
+  background: var(--content-bg);
+  color: var(--label);
+}
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+}

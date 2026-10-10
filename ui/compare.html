@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Compare Versions</title>
+  <script>window.addEventListener('contextmenu', (e) => e.preventDefault(), true);</script>
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/tokens.css">
+  <link rel="stylesheet" href="styles/compare.css">
+</head>
+<body data-tauri-drag-region>
+  <div id="compare-app">
+    <header class="compare-header" data-tauri-drag-region>
+      <div class="header-left">
+        <h1 id="diff-file-name">Document</h1>
+      </div>
+      <div class="header-center">
+        <select id="diff-v-left" class="version-picker"><option>v1</option></select>
+        <span class="compare-vs">vs</span>
+        <select id="diff-v-right" class="version-picker"><option>v2 (Latest)</option></select>
+      </div>
+      <div class="header-right">
+        <div class="segmented-control">
+          <button class="segment active">Unified</button>
+          <button class="segment">Split</button>
+        </div>
+        <button id="diff-pin-btn" class="icon-btn" title="Toggle Pin">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.36a.5.5 0 0 0 .622.622l4.36-1.32a2 2 0 0 0 .83-.5ZM8 15h.01M11 15h.01M14 15h.01M17 15h.01M11 12h.01M14 12h.01M17 12h.01M14 9h.01M17 9h.01M17 6h.01"/></svg>
+        </button>
+      </div>
+    </header>
+    
+    <div class="diff-stats-bar">
+      <span id="diff-stat-added" class="stat-added">+0 lines</span>
+      <span id="diff-stat-removed" class="stat-removed">-0 lines</span>
+      <span id="diff-stat-unchanged">0 unchanged</span>
+    </div>
+    
+    <main id="diff-content" class="diff-content">
+      <!-- Diff lines go here -->
+    </main>
+    
+    <footer class="compare-footer">
+      <button class="btn btn-primary" id="btn-restore">Restore Version</button>
+      <button class="btn btn-secondary" id="btn-reveal">Reveal in Finder</button>
+    </footer>
+  </div>
+  <script type="module" src="compare.js"></script>
+</body>
+</html>

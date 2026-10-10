@@ -1,0 +1,15 @@
+# Rust build artifacts
+target/
+**/target/
+**/.fastembed_cache/
+
+# Node / Tauri artifacts
+node_modules/
+dist/
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+*.swp
+*.bak
+.serchx/

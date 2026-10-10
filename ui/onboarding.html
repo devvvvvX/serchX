@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Welcome to serchX</title>
+  <script>window.addEventListener('contextmenu', (e) => e.preventDefault(), true);</script>
+  <link rel="stylesheet" href="styles/tokens.css">
+  <link rel="stylesheet" href="styles/base.css">
+  <link rel="stylesheet" href="styles/onboarding.css">
+</head>
+<body>
+  <div class="onboarding-app">
+    <!-- Top Step Bar (macOS draggable header) -->
+    <header class="onboarding-header" data-tauri-drag-region>
+      <div class="step-indicator">
+        <div id="dot-step-1" class="step-dot active">
+          <span class="step-circle">1</span>
+          <span>Welcome</span>
+        </div>
+        <div class="step-separator"></div>
+        <div id="dot-step-2" class="step-dot">
+          <span class="step-circle">2</span>
+          <span>Folders</span>
+        </div>
+        <div class="step-separator"></div>
+        <div id="dot-step-3" class="step-dot">
+          <span class="step-circle">3</span>
+          <span>Neural Engine</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content Panes -->
+    <main class="onboarding-content">
+      <!-- Step 1: Welcome -->
+      <section id="step-1" class="step-pane active">
+        <div class="welcome-hero">
+          <div class="hero-icon-wrap">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </div>
+          <h1 class="hero-title">Welcome to serchX</h1>
+          <p class="hero-desc">The lightning-fast, private local search engine for your Mac. Search across files and synthesize answers completely on-device.</p>
+
+          <div class="feature-cards-grid">
+            <div class="feature-card">
+              <div class="feature-card-icon">⚡</div>
+              <div class="feature-card-title">Instant Search</div>
+              <p class="feature-card-desc">Sub-millisecond hybrid keyword and semantic search across your local files.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-card-icon">🔒</div>
+              <div class="feature-card-title">100% Private</div>
+              <p class="feature-card-desc">Zero cloud egress. All files, embeddings, and indices stay exclusively on your Mac.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-card-icon">🧠</div>
+              <div class="feature-card-title">On-Device AI</div>
+              <p class="feature-card-desc">Synthesize answers and summarize documents using local models or LM Studio.</p>
+            </div>
+          </div>
+
+          <div class="welcome-tip-banner">
+            <span>Global Launcher Shortcut:</span>
+            <span class="kbd-badge">⌥ Option</span> + <span class="kbd-badge">Space</span>
+            <span>(Summon serchX anytime)</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 2: Choose What to Index -->
+      <section id="step-2" class="step-pane">
+        <div class="section-header">
+          <h2 class="section-title">Choose Folders to Index</h2>
+          <p class="section-desc">serchX only accesses folders you explicitly select. We never scan without your consent.</p>
+        </div>
+
+        <div id="folders-list-container" class="folder-pick-list">
+          <!-- Documents -->
+          <div class="folder-item">
+            <div class="folder-info">
+              <div class="folder-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+              <div class="folder-texts">
+                <div class="folder-name-row">
+                  <span class="folder-name">Documents</span>
+                  <span class="folder-tag recommended">Common</span>
+                </div>
+                <span class="folder-subpath">~/Documents</span>
+              </div>
+            </div>
+            <div class="folder-actions">
+              <label class="switch">
+                <input type="checkbox" id="check-folder-documents">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Desktop -->
+          <div class="folder-item">
+            <div class="folder-info">
+              <div class="folder-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              </div>
+              <div class="folder-texts">
+                <div class="folder-name-row">
+                  <span class="folder-name">Desktop</span>
+                </div>
+                <span class="folder-subpath">~/Desktop</span>
+              </div>
+            </div>
+            <div class="folder-actions">
+              <label class="switch">
+                <input type="checkbox" id="check-folder-desktop">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Downloads -->
+          <div class="folder-item">
+            <div class="folder-info">
+              <div class="folder-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              </div>
+              <div class="folder-texts">
+                <div class="folder-name-row">
+                  <span class="folder-name">Downloads</span>
+                </div>
+                <span class="folder-subpath">~/Downloads</span>
+              </div>
+            </div>
+            <div class="folder-actions">
+              <label class="switch">
+                <input type="checkbox" id="check-folder-downloads">
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Custom folders dynamically added here -->
+          <div id="custom-folders-container"></div>
+        </div>
+
+        <button id="btn-pick-custom-folder" class="custom-folder-add-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Custom Folder...
+        </button>
+
+        <div class="privacy-notice-box">
+          <span class="privacy-icon">✓</span>
+          <div>
+            <strong>Strict Privacy Guarantee:</strong> Folders are only accessed when you explicitly select them. You can pause, re-index, or remove any folder anytime in Settings.
+          </div>
+        </div>
+      </section>
+
+      <!-- Step 3: Neural Engine Setup -->
+      <section id="step-3" class="step-pane">
+        <div class="section-header">
+          <h2 class="section-title">Local AI & Neural Engine</h2>
+          <p class="section-desc">Choose how serchX will synthesize search answers and summarize documents.</p>
+        </div>
+
+        <div class="ai-options-group">
+          <!-- Option 1: On-Device Model (Native Metal) -->
+          <div id="card-ai-native" class="ai-option-card selected">
+            <div class="ai-option-header">
+              <div class="ai-option-title-group">
+                <div class="ai-radio-circle"><div class="ai-radio-inner"></div></div>
+                <span class="ai-option-title">On-Device Neural Model (Metal GPU)</span>
+              </div>
+              <span id="ai-hardware-badge" class="ai-badge recommended">Recommended</span>
+            </div>
+            <p id="ai-native-model-desc" class="ai-option-desc">
+              Download a lightweight open model optimized for your Apple Silicon Mac. 100% private on-device inference with zero cloud cost.
+            </p>
+            <div class="ai-subconfig" style="display: flex;">
+              <label style="font-size: 11px; color: var(--label); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                <input type="checkbox" id="check-download-native-model" checked>
+                <span id="download-native-model-label">Download recommended model in background</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Option 2: Local Server (LM Studio / Ollama) -->
+          <div id="card-ai-server" class="ai-option-card">
+            <div class="ai-option-header">
+              <div class="ai-option-title-group">
+                <div class="ai-radio-circle"><div class="ai-radio-inner"></div></div>
+                <span class="ai-option-title">Local Server (LM Studio / Ollama)</span>
+              </div>
+              <span class="ai-badge byo">Custom Server</span>
+            </div>
+            <p class="ai-option-desc">
+              Connect to your existing local AI server. Use your downloaded models from LM Studio or Ollama without downloading again.
+            </p>
+            <div class="ai-subconfig">
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <select id="select-onboarding-provider" class="text-input" style="height: 24px; font-size: 11px; padding: 0 8px; background: var(--content-bg); border: 0.5px solid var(--separator); border-radius: 4px; color: var(--label);">
+                  <option value="lm_studio">LM Studio (v1 API)</option>
+                  <option value="ollama">Ollama</option>
+                </select>
+                <input type="text" id="input-onboarding-endpoint" class="text-input" style="height: 24px; width: 170px; font-size: 11px; font-family: var(--mono); padding: 0 8px; background: var(--content-bg); border: 0.5px solid var(--separator); border-radius: 4px; color: var(--label);" value="http://127.0.0.1:1234">
+                <button id="btn-onboarding-test-server" class="btn" style="height: 24px; padding: 0 8px; font-size: 10px;">Check</button>
+              </div>
+              <span id="onboarding-server-status" style="font-size: 10px; color: var(--label-2);"></span>
+            </div>
+          </div>
+
+          <!-- Option 3: Search Only -->
+          <div id="card-ai-none" class="ai-option-card">
+            <div class="ai-option-header">
+              <div class="ai-option-title-group">
+                <div class="ai-radio-circle"><div class="ai-radio-inner"></div></div>
+                <span class="ai-option-title">Search Only (No AI Synthesis)</span>
+              </div>
+              <span class="ai-badge light">Lightweight</span>
+            </div>
+            <p class="ai-option-desc">
+              Focus purely on fast keyword & semantic file retrieval. Zero extra RAM or background model downloads. You can enable AI later in Settings.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Footer Navigation -->
+    <footer class="onboarding-footer">
+      <div class="footer-left">
+        <button id="btn-back" class="btn" style="display: none;">← Back</button>
+        <button id="btn-skip-setup" class="btn btn-subtle">Configure Later</button>
+      </div>
+      <div class="footer-right">
+        <button id="btn-next" class="btn btn-primary">Get Started →</button>
+      </div>
+    </footer>
+  </div>
+
+  <script type="module" src="onboarding.js"></script>
+</body>
+</html>

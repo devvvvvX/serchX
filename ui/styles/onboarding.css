@@ -1,0 +1,620 @@
+/* onboarding.css - macOS native multi-step onboarding assistant */
+
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--window-bg);
+  color: var(--label);
+  font-family: var(--font);
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.onboarding-app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+  background: var(--window-bg);
+}
+
+/* Header with macOS drag region and step indicator */
+.onboarding-header {
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-bottom: 0.5px solid var(--separator);
+  background: var(--window-bg);
+  flex-shrink: 0;
+  -webkit-app-region: drag;
+}
+
+.step-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.step-dot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--label-3);
+  transition: all var(--dur) var(--ease);
+}
+
+.step-dot.active {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.step-dot.completed {
+  color: var(--label-2);
+}
+
+.step-circle {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--fill-tertiary);
+  color: var(--label-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 600;
+  transition: all var(--dur) var(--ease);
+}
+
+.step-dot.active .step-circle {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(10, 132, 255, 0.4);
+}
+
+.step-dot.completed .step-circle {
+  background: var(--green);
+  color: #fff;
+}
+
+.step-separator {
+  width: 24px;
+  height: 1px;
+  background: var(--separator);
+}
+
+/* Step container and step panes */
+.onboarding-content {
+  flex: 1;
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px 36px 12px 36px;
+}
+
+.step-pane {
+  display: none;
+  flex-direction: column;
+  height: 100%;
+  animation: fadeInPane 220ms var(--ease);
+}
+
+.step-pane.active {
+  display: flex;
+}
+
+@keyframes fadeInPane {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Step 1: Welcome */
+.welcome-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.hero-icon-wrap {
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #0a84ff 0%, #0056b3 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  box-shadow: 0 8px 24px rgba(10, 132, 255, 0.35);
+  margin-bottom: 16px;
+}
+
+.hero-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--label);
+  margin: 0 0 6px 0;
+  letter-spacing: -0.3px;
+}
+
+.hero-desc {
+  font-size: 13px;
+  color: var(--label-2);
+  margin: 0 0 24px 0;
+  max-width: 440px;
+  line-height: 1.45;
+}
+
+.feature-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  width: 100%;
+  max-width: 580px;
+  margin-bottom: 20px;
+}
+
+.feature-card {
+  background: var(--group-bg);
+  border: 0.5px solid var(--separator);
+  border-radius: 10px;
+  padding: 14px 12px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: transform var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+
+.feature-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(10, 132, 255, 0.35);
+}
+
+.feature-card-icon {
+  font-size: 18px;
+  margin-bottom: 2px;
+}
+
+.feature-card-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--label);
+}
+
+.feature-card-desc {
+  font-size: 11px;
+  color: var(--label-2);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.welcome-tip-banner {
+  background: var(--group-bg);
+  border: 0.5px solid var(--separator);
+  border-radius: 8px;
+  padding: 8px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--label-2);
+}
+
+.kbd-badge {
+  background: var(--content-bg);
+  border: 0.5px solid var(--separator);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 10px;
+  font-family: var(--mono);
+  color: var(--label);
+  font-weight: 600;
+}
+
+/* Step 2: Folders */
+.section-header {
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--label);
+  margin: 0 0 4px 0;
+}
+
+.section-desc {
+  font-size: 12px;
+  color: var(--label-2);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.folder-pick-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.folder-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--group-bg);
+  border: 0.5px solid var(--separator);
+  border-radius: 8px;
+  transition: background var(--dur) var(--ease), border-color var(--dur) var(--ease);
+}
+
+.folder-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.folder-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.folder-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(10, 132, 255, 0.12);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.folder-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.folder-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.folder-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--label);
+}
+
+.folder-tag {
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.folder-tag.recommended {
+  background: rgba(10, 132, 255, 0.15);
+  color: var(--accent);
+}
+
+.folder-tag.custom {
+  background: rgba(255, 149, 0, 0.15);
+  color: #ff9500;
+}
+
+.folder-subpath {
+  font-size: 11px;
+  color: var(--label-2);
+  font-family: var(--mono);
+}
+
+.folder-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.custom-folder-add-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  height: 32px;
+  border: 1px dashed var(--separator);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--dur) var(--ease);
+  margin-bottom: 12px;
+}
+
+.custom-folder-add-btn:hover {
+  background: rgba(10, 132, 255, 0.08);
+  border-color: var(--accent);
+}
+
+.privacy-notice-box {
+  background: rgba(52, 199, 89, 0.08);
+  border: 0.5px solid rgba(52, 199, 89, 0.25);
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--label-2);
+  line-height: 1.45;
+}
+
+.privacy-icon {
+  color: #34c759;
+  font-size: 14px;
+  margin-top: 1px;
+}
+
+/* Step 3: Neural Engine Setup */
+.ai-options-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.ai-option-card {
+  background: var(--group-bg);
+  border: 1.5px solid var(--separator);
+  border-radius: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all var(--dur) var(--ease);
+}
+
+.ai-option-card:hover {
+  border-color: rgba(10, 132, 255, 0.4);
+}
+
+.ai-option-card.selected {
+  border-color: var(--accent);
+  background: rgba(10, 132, 255, 0.06);
+}
+
+.ai-option-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ai-option-title-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ai-radio-circle {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1.5px solid var(--label-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--dur) var(--ease);
+}
+
+.ai-option-card.selected .ai-radio-circle {
+  border-color: var(--accent);
+}
+
+.ai-radio-inner {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: transparent;
+  transition: all var(--dur) var(--ease);
+}
+
+.ai-option-card.selected .ai-radio-inner {
+  background: var(--accent);
+}
+
+.ai-option-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--label);
+}
+
+.ai-badge {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.ai-badge.recommended {
+  background: rgba(10, 132, 255, 0.15);
+  color: var(--accent);
+}
+
+.ai-badge.byo {
+  background: rgba(175, 82, 222, 0.15);
+  color: #bf5af2;
+}
+
+.ai-badge.light {
+  background: rgba(142, 142, 147, 0.15);
+  color: var(--label-2);
+}
+
+.ai-option-desc {
+  font-size: 12px;
+  color: var(--label-2);
+  line-height: 1.4;
+  margin: 0;
+  padding-left: 24px;
+}
+
+.ai-subconfig {
+  padding-left: 24px;
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.ai-option-card.selected .ai-subconfig {
+  display: flex;
+}
+
+/* Footer Navigation Controls */
+.onboarding-footer {
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  border-top: 0.5px solid var(--separator);
+  background: var(--window-bg);
+  flex-shrink: 0;
+}
+
+.footer-left {
+  display: flex;
+  align-items: center;
+}
+
+.footer-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn {
+  height: 30px;
+  padding: 0 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 0.5px solid var(--separator);
+  background: var(--content-bg);
+  color: var(--label);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all var(--dur) var(--ease);
+}
+
+.btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  background: #0071e3;
+}
+
+.btn-subtle {
+  background: transparent;
+  border: none;
+  color: var(--label-2);
+}
+
+.btn-subtle:hover {
+  color: var(--label);
+  background: transparent;
+  text-decoration: underline;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Switch toggle */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 34px;
+  height: 20px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: var(--fill-tertiary);
+  transition: .2s;
+  border-radius: 20px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 2px;
+  bottom: 2px;
+  background-color: white;
+  transition: .2s;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+input:checked + .slider {
+  background-color: var(--accent);
+}
+
+input:checked + .slider:before {
+  transform: translateX(14px);
+}
+
+.btn-remove-folder {
+  background: transparent;
+  border: none;
+  color: var(--label-3, rgba(235, 235, 245, 0.3));
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+
+.btn-remove-folder:hover {
+  color: var(--color-destructive, #ff453a);
+  background: rgba(255, 69, 58, 0.12);
+}
