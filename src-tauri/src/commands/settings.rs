@@ -5,9 +5,7 @@ use std::sync::Arc;
 use tauri::{Emitter, State};
 
 #[tauri::command]
-pub fn get_settings(
-    db: State<'_, Arc<DatabaseManager>>,
-) -> Result<AppSettings, String> {
+pub fn get_settings(db: State<'_, Arc<DatabaseManager>>) -> Result<AppSettings, String> {
     db.get_app_settings().map_err(|e| e.to_string())
 }
 
@@ -48,7 +46,10 @@ pub async fn update_settings(
     {
         use tauri_plugin_global_shortcut::GlobalShortcutExt;
         let _ = app.global_shortcut().unregister_all();
-        if let Ok(shortcut) = settings.global_hotkey.parse::<tauri_plugin_global_shortcut::Shortcut>() {
+        if let Ok(shortcut) = settings
+            .global_hotkey
+            .parse::<tauri_plugin_global_shortcut::Shortcut>()
+        {
             if let Err(e) = app.global_shortcut().register(shortcut) {
                 tracing::error!("Failed to register new global shortcut: {:?}", e);
             }
@@ -72,7 +73,10 @@ pub async fn reset_settings(
     {
         use tauri_plugin_global_shortcut::GlobalShortcutExt;
         let _ = app.global_shortcut().unregister_all();
-        if let Ok(shortcut) = defaults.global_hotkey.parse::<tauri_plugin_global_shortcut::Shortcut>() {
+        if let Ok(shortcut) = defaults
+            .global_hotkey
+            .parse::<tauri_plugin_global_shortcut::Shortcut>()
+        {
             if let Err(e) = app.global_shortcut().register(shortcut) {
                 tracing::error!("Failed to register new global shortcut: {:?}", e);
             }

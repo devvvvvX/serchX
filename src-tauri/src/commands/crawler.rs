@@ -20,7 +20,10 @@ pub fn start_crawl(
 
     for p in &path_bufs {
         let p_norm = p.to_string_lossy().trim_end_matches('/').to_string();
-        if let Some(existing) = watched_folders.iter().find(|f| f.path.trim_end_matches('/') == p_norm) {
+        if let Some(existing) = watched_folders
+            .iter()
+            .find(|f| f.path.trim_end_matches('/') == p_norm)
+        {
             to_enqueue.push(existing.clone());
         } else {
             to_enqueue.push(crate::models::WatchedFolder {
@@ -128,7 +131,10 @@ pub fn export_app_logs(
             pb
         }
         None => {
-            let filename = format!("serchx_logs_{}.log", chrono::Utc::now().format("%Y%m%d_%H%M%S"));
+            let filename = format!(
+                "serchx_logs_{}.log",
+                chrono::Utc::now().format("%Y%m%d_%H%M%S")
+            );
             dirs::desktop_dir()
                 .or_else(dirs::download_dir)
                 .or_else(dirs::home_dir)
@@ -138,11 +144,13 @@ pub fn export_app_logs(
     };
 
     if log_file.exists() {
-        std::fs::copy(&log_file, &dest_path).map_err(|e| format!("Failed to copy log file: {}", e))?;
+        std::fs::copy(&log_file, &dest_path)
+            .map_err(|e| format!("Failed to copy log file: {}", e))?;
     } else if let Some(buf) = app_handle.try_state::<crate::logging::LogRingBuffer>() {
         let lines = buf.get_lines(None);
         let content = lines.join("\n");
-        std::fs::write(&dest_path, content).map_err(|e| format!("Failed to write log buffer: {}", e))?;
+        std::fs::write(&dest_path, content)
+            .map_err(|e| format!("Failed to write log buffer: {}", e))?;
     } else {
         std::fs::write(&dest_path, "").map_err(|e| format!("Failed to write log file: {}", e))?;
     }
@@ -172,7 +180,8 @@ pub fn reveal_app_logs_in_finder(app_handle: tauri::AppHandle) -> Result<(), Str
         } else {
             cmd.arg(&logs_dir);
         }
-        cmd.spawn().map_err(|e| format!("Failed to reveal logs in Finder: {}", e))?;
+        cmd.spawn()
+            .map_err(|e| format!("Failed to reveal logs in Finder: {}", e))?;
     }
 
     #[cfg(not(target_os = "macos"))]
@@ -199,9 +208,7 @@ pub fn remove_dead_letter_item(
 }
 
 #[tauri::command]
-pub fn clear_dead_letter_queue(
-    db: State<'_, Arc<DatabaseManager>>,
-) -> Result<(), String> {
+pub fn clear_dead_letter_queue(db: State<'_, Arc<DatabaseManager>>) -> Result<(), String> {
     db.clear_dead_letter_queue().map_err(|e| e.to_string())
 }
 
@@ -222,4 +229,3 @@ pub fn retry_dead_letter_item(
     });
     Ok(())
 }
-

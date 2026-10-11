@@ -51,7 +51,10 @@ impl OllamaClient {
     pub fn is_localhost(endpoint: &str) -> bool {
         if let Ok(url) = reqwest::Url::parse(endpoint) {
             if let Some(host) = url.host_str() {
-                return host == "localhost" || host == "127.0.0.1" || host == "::1" || host == "[::1]";
+                return host == "localhost"
+                    || host == "127.0.0.1"
+                    || host == "::1"
+                    || host == "[::1]";
             }
         }
         false
@@ -106,7 +109,9 @@ impl LlmProvider for OllamaClient {
         token_sender: Sender<String>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         if !Self::is_localhost(&self.endpoint) {
-            return Err("External cloud endpoints strictly prohibited for privacy (zero egress)".into());
+            return Err(
+                "External cloud endpoints strictly prohibited for privacy (zero egress)".into(),
+            );
         }
 
         let client = reqwest::Client::builder()
@@ -175,7 +180,10 @@ impl LlmProvider for OllamaClient {
             }
             _ => {
                 // Try fallback to OpenAI compatible /v1/chat/completions (LM Studio, Ollama /v1)
-                let chat_url = format!("{}/v1/chat/completions", self.endpoint.trim_end_matches('/'));
+                let chat_url = format!(
+                    "{}/v1/chat/completions",
+                    self.endpoint.trim_end_matches('/')
+                );
                 let chat_body = serde_json::json!({
                     "model": self.model_name,
                     "messages": [
@@ -189,7 +197,11 @@ impl LlmProvider for OllamaClient {
 
                 let chat_resp = client.post(&chat_url).json(&chat_body).send().await?;
                 if !chat_resp.status().is_success() {
-                    return Err(format!("Local inference server returned HTTP {}", chat_resp.status()).into());
+                    return Err(format!(
+                        "Local inference server returned HTTP {}",
+                        chat_resp.status()
+                    )
+                    .into());
                 }
 
                 self.loaded.store(true, Ordering::Relaxed);
@@ -215,7 +227,8 @@ impl LlmProvider for OllamaClient {
                                 return Ok(());
                             }
                             if let Ok(json) = serde_json::from_str::<Value>(data) {
-                                if let Some(delta) = json["choices"][0]["delta"]["content"].as_str() {
+                                if let Some(delta) = json["choices"][0]["delta"]["content"].as_str()
+                                {
                                     if !delta.is_empty() {
                                         if token_sender.send(delta.to_string()).await.is_err() {
                                             return Ok(());

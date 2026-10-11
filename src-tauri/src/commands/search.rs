@@ -44,4 +44,3 @@ pub async fn search_grouped(
         .await
         .map_err(|e| e.to_string())
 }
-

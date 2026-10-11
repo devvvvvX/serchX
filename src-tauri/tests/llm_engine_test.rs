@@ -30,8 +30,14 @@ Excerpt: """Corporate tax rate for Delaware LLC is set to 8.7% flat."""
     let res_cancelled = runner
         .generate_stream(prompt, "", 0.2, 512, cancel_token, tx_cancel)
         .await;
-    assert!(res_cancelled.is_ok(), "Cancelled stream should exit cleanly");
-    assert!(rx_cancel.recv().await.is_none(), "Cancelled stream must emit zero tokens");
+    assert!(
+        res_cancelled.is_ok(),
+        "Cancelled stream should exit cleanly"
+    );
+    assert!(
+        rx_cancel.recv().await.is_none(),
+        "Cancelled stream must emit zero tokens"
+    );
 
     // Test missing model weights fail safely without crashing
     let (tx, _rx) = mpsc::channel(64);
@@ -65,18 +71,30 @@ async fn test_llm_memory_lifecycle() {
     // Explicit load fails safely when model file does not exist on disk
     let provider = manager.resolve_provider(&settings).await;
     let load_res = provider.load().await;
-    assert!(load_res.is_err(), "Missing GGUF model file must return Err upon load");
+    assert!(
+        load_res.is_err(),
+        "Missing GGUF model file must return Err upon load"
+    );
 
     let status_mid = manager.get_status(&settings).await;
-    assert!(!status_mid.is_loaded, "Missing model file must leave provider unloaded");
+    assert!(
+        !status_mid.is_loaded,
+        "Missing model file must leave provider unloaded"
+    );
     assert!(status_mid.ram_usage_bytes.is_none());
 
     // Explicit unload
     let unload_res = provider.unload().await;
     assert!(unload_res.is_ok());
     let status_after = manager.get_status(&settings).await;
-    assert!(!status_after.is_loaded, "Model weights must remain unloaded from RAM");
-    assert!(status_after.ram_usage_bytes.is_none(), "Unloaded model must not report ram_usage_bytes");
+    assert!(
+        !status_after.is_loaded,
+        "Model weights must remain unloaded from RAM"
+    );
+    assert!(
+        status_after.ram_usage_bytes.is_none(),
+        "Unloaded model must not report ram_usage_bytes"
+    );
 }
 
 #[tokio::test]
@@ -131,7 +149,10 @@ async fn test_external_provider_ram_usage_is_none() {
 
     let status = manager.get_status(&ollama_settings).await;
     assert_eq!(status.provider, "ollama");
-    assert!(status.ram_usage_bytes.is_none(), "Reusing external Ollama model must not report RAM usage");
+    assert!(
+        status.ram_usage_bytes.is_none(),
+        "Reusing external Ollama model must not report RAM usage"
+    );
 
     let lm_studio_settings = AppSettings {
         llm_provider: "lm_studio".to_string(),
@@ -142,7 +163,10 @@ async fn test_external_provider_ram_usage_is_none() {
 
     let status_lm = manager.get_status(&lm_studio_settings).await;
     assert_eq!(status_lm.provider, "lm_studio");
-    assert!(status_lm.ram_usage_bytes.is_none(), "Reusing external LM Studio model must not report RAM usage");
+    assert!(
+        status_lm.ram_usage_bytes.is_none(),
+        "Reusing external LM Studio model must not report RAM usage"
+    );
 }
 
 #[test]
@@ -202,7 +226,8 @@ async fn test_lm_studio_resolve_model() {
         let resolved = LmStudioClient::resolve_active_model(
             "http://127.0.0.1:1234",
             "custom-qwen3-4b-thinking-2507.Q4_K_M",
-        ).await;
+        )
+        .await;
         println!("Resolved LM Studio model: {}", resolved);
         assert!(!resolved.is_empty());
         assert!(!resolved.to_lowercase().contains("embed"));

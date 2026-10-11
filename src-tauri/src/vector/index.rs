@@ -10,7 +10,8 @@ pub trait VectorIndex: Send + Sync {
         }
         Ok(())
     }
-    fn search_knn(&self, query_vector: &[f32], limit: usize) -> Result<Vec<(String, f32)>, DbError>;
+    fn search_knn(&self, query_vector: &[f32], limit: usize)
+        -> Result<Vec<(String, f32)>, DbError>;
     fn delete_vector(&self, chunk_id: &str) -> Result<(), DbError>;
     fn count_vectors(&self) -> Result<usize, DbError>;
     fn vector_storage_bytes(&self) -> Result<u64, DbError>;
@@ -65,7 +66,11 @@ impl VectorIndex for SqliteVectorIndex {
         self.insert_vectors_batch(&[(chunk_id, embedding)])
     }
 
-    fn search_knn(&self, query_vector: &[f32], limit: usize) -> Result<Vec<(String, f32)>, DbError> {
+    fn search_knn(
+        &self,
+        query_vector: &[f32],
+        limit: usize,
+    ) -> Result<Vec<(String, f32)>, DbError> {
         if query_vector.is_empty() || limit == 0 {
             return Ok(Vec::new());
         }
@@ -119,7 +124,10 @@ impl VectorIndex for SqliteVectorIndex {
 
     fn delete_vector(&self, chunk_id: &str) -> Result<(), DbError> {
         let conn = self.db.lock_conn()?;
-        conn.execute("DELETE FROM chunk_vectors WHERE chunk_id = ?1", params![chunk_id])?;
+        conn.execute(
+            "DELETE FROM chunk_vectors WHERE chunk_id = ?1",
+            params![chunk_id],
+        )?;
         Ok(())
     }
 

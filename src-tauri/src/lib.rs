@@ -4,16 +4,15 @@ pub mod crawler;
 pub mod db;
 pub mod diff;
 pub mod ingest;
+pub mod llm;
 pub mod logging;
 pub mod models;
 pub mod safety;
 pub mod scope;
 pub mod search;
 pub mod vector;
-pub mod llm;
 
 pub struct AppLogGuard(pub Option<tracing_appender::non_blocking::WorkerGuard>);
-
 
 use crate::crawler::{CrawlController, CrawlerEngine};
 use crate::db::DatabaseManager;
@@ -31,9 +30,8 @@ pub fn run() {
     let last_blur_instant_tray = last_blur_instant.clone();
     let last_blur_instant_win = last_blur_instant.clone();
 
-    let mut builder = tauri::Builder::default()
-        .plugin(tauri_plugin_dialog::init());
-    
+    let mut builder = tauri::Builder::default().plugin(tauri_plugin_dialog::init());
+
     #[cfg(target_os = "macos")]
     {
         use tauri_plugin_global_shortcut::ShortcutState;
@@ -45,8 +43,12 @@ pub fn run() {
                             if window.is_visible().unwrap_or(false) {
                                 let _ = window.hide();
                             } else {
-                                if let Some((x, y)) = crate::commands::ui::get_recorded_window_position() {
-                                    let _ = window.set_position(tauri::Position::Physical(tauri::PhysicalPosition { x, y }));
+                                if let Some((x, y)) =
+                                    crate::commands::ui::get_recorded_window_position()
+                                {
+                                    let _ = window.set_position(tauri::Position::Physical(
+                                        tauri::PhysicalPosition { x, y },
+                                    ));
                                 }
                                 let _ = window.show();
                                 let _ = window.set_focus();
@@ -79,7 +81,9 @@ pub fn run() {
             let fts = Arc::new(crate::search::Fts5SearchEngine::new(db.clone()));
             let vector_index = Arc::new(crate::vector::SqliteVectorIndex::new(db.clone()));
             let embedder: Option<Arc<dyn crate::vector::Embedder>> =
-                crate::vector::FastEmbedder::try_new().ok().map(|e| Arc::new(e) as Arc<dyn crate::vector::Embedder>);
+                crate::vector::FastEmbedder::try_new()
+                    .ok()
+                    .map(|e| Arc::new(e) as Arc<dyn crate::vector::Embedder>);
 
             let extractors = Arc::new(ExtractorRegistry::new());
             let ocr = Arc::new(AppleVisionOcr::new());
@@ -93,7 +97,9 @@ pub fn run() {
                 embedder,
             ));
             let controller = CrawlController::new();
-            let coordinator = Arc::new(crate::crawler::CrawlCoordinator::new(Some(app_handle.clone())));
+            let coordinator = Arc::new(crate::crawler::CrawlCoordinator::new(Some(
+                app_handle.clone(),
+            )));
             let crawler = Arc::new(CrawlerEngine::with_coordinator(
                 pipeline.clone(),
                 controller,
@@ -145,7 +151,8 @@ pub fn run() {
                     while let Ok(event) = rx.recv() {
                         tracing::info!("FileWatcher received event: {:?}", event);
                         match event.kind {
-                            crate::ingest::WatchEventKind::Created | crate::ingest::WatchEventKind::Modified => {
+                            crate::ingest::WatchEventKind::Created
+                            | crate::ingest::WatchEventKind::Modified => {
                                 if event.path.is_file() {
                                     tracing::info!("Ingesting new/modified file: {:?}", event.path);
                                     let _ = pipeline_for_watcher.ingest_file(&event.path);
@@ -210,7 +217,9 @@ pub fn run() {
                     }
                     if is_on_monitor {
                         crate::commands::ui::record_window_position(x, y);
-                        let _ = window.set_position(tauri::Position::Physical(tauri::PhysicalPosition { x, y }));
+                        let _ = window.set_position(tauri::Position::Physical(
+                            tauri::PhysicalPosition { x, y },
+                        ));
                     } else {
                         let _ = window.center();
                         if let Ok(pos) = window.outer_position() {
@@ -228,77 +237,86 @@ pub fn run() {
             }
 
             // Setup macOS Menu Bar System Tray
-            let quit_i = tauri::menu::MenuItem::with_id(app, "quit", "Quit serchX", true, None::<&str>)?;
-            let settings_i = tauri::menu::MenuItem::with_id(app, "settings", "Settings...", true, None::<&str>)?;
+            let quit_i =
+                tauri::menu::MenuItem::with_id(app, "quit", "Quit serchX", true, None::<&str>)?;
+            let settings_i =
+                tauri::menu::MenuItem::with_id(app, "settings", "Settings...", true, None::<&str>)?;
             let tray_menu = tauri::menu::Menu::with_items(app, &[&settings_i, &quit_i])?;
 
-            let tray_icon = tauri::image::Image::from_bytes(include_bytes!("../icons/tray-template.png"))?;
+            let tray_icon =
+                tauri::image::Image::from_bytes(include_bytes!("../icons/tray-template.png"))?;
             let tray_blur = last_blur_instant_tray.clone();
             let _ = tauri::tray::TrayIconBuilder::with_id("main-tray")
-                    .icon(tray_icon)
-                    .icon_as_template(true)
-                    .tooltip("serchX")
-                    .menu(&tray_menu)
-                    .show_menu_on_left_click(false)
-                    .on_menu_event(|app, event| {
-                        match event.id.as_ref() {
-                            "quit" => {
-                                app.exit(0);
-                            }
-                            "settings" => {
-                                let _ = crate::commands::ui::open_settings_window(app.clone(), None);
-                            }
-                            _ => {}
-                        }
-                    })
-                    .on_tray_icon_event(move |tray, event| {
-                        if let tauri::tray::TrayIconEvent::Click {
-                            button: tauri::tray::MouseButton::Left,
-                            button_state: tauri::tray::MouseButtonState::Up,
-                            ..
-                        } = event {
-                            let debounced = {
-                                if let Ok(mut lock) = tray_blur.lock() {
-                                    if let Some(instant) = *lock {
-                                        if instant.elapsed() < std::time::Duration::from_millis(350) {
-                                            *lock = None;
-                                            true
-                                        } else {
-                                            false
-                                        }
+                .icon(tray_icon)
+                .icon_as_template(true)
+                .tooltip("serchX")
+                .menu(&tray_menu)
+                .show_menu_on_left_click(false)
+                .on_menu_event(|app, event| match event.id.as_ref() {
+                    "quit" => {
+                        app.exit(0);
+                    }
+                    "settings" => {
+                        let _ = crate::commands::ui::open_settings_window(app.clone(), None);
+                    }
+                    _ => {}
+                })
+                .on_tray_icon_event(move |tray, event| {
+                    if let tauri::tray::TrayIconEvent::Click {
+                        button: tauri::tray::MouseButton::Left,
+                        button_state: tauri::tray::MouseButtonState::Up,
+                        ..
+                    } = event
+                    {
+                        let debounced = {
+                            if let Ok(mut lock) = tray_blur.lock() {
+                                if let Some(instant) = *lock {
+                                    if instant.elapsed() < std::time::Duration::from_millis(350) {
+                                        *lock = None;
+                                        true
                                     } else {
                                         false
                                     }
                                 } else {
                                     false
                                 }
-                            };
-
-                            if debounced {
-                                // Tray click caused or coincided with blur dismissal; remain hidden
-                                return;
+                            } else {
+                                false
                             }
+                        };
 
-                            let app = tray.app_handle();
-                            if let Some(window) = app.get_webview_window("main") {
-                                if window.is_visible().unwrap_or(false) {
-                                    let _ = window.hide();
-                                } else {
-                                    if let Some((x, y)) = crate::commands::ui::get_recorded_window_position() {
-                                        let _ = window.set_position(tauri::Position::Physical(tauri::PhysicalPosition { x, y }));
-                                    }
-                                    let _ = window.show();
-                                    let _ = window.set_focus();
+                        if debounced {
+                            // Tray click caused or coincided with blur dismissal; remain hidden
+                            return;
+                        }
+
+                        let app = tray.app_handle();
+                        if let Some(window) = app.get_webview_window("main") {
+                            if window.is_visible().unwrap_or(false) {
+                                let _ = window.hide();
+                            } else {
+                                if let Some((x, y)) =
+                                    crate::commands::ui::get_recorded_window_position()
+                                {
+                                    let _ = window.set_position(tauri::Position::Physical(
+                                        tauri::PhysicalPosition { x, y },
+                                    ));
                                 }
+                                let _ = window.show();
+                                let _ = window.set_focus();
                             }
                         }
-                    })
-                    .build(app);
+                    }
+                })
+                .build(app);
 
             #[cfg(target_os = "macos")]
             {
                 use tauri_plugin_global_shortcut::GlobalShortcutExt;
-                let hotkey_str = db.get_app_settings().map(|s| s.global_hotkey).unwrap_or_else(|_| "Option+Space".to_string());
+                let hotkey_str = db
+                    .get_app_settings()
+                    .map(|s| s.global_hotkey)
+                    .unwrap_or_else(|_| "Option+Space".to_string());
                 if let Ok(shortcut) = hotkey_str.parse::<tauri_plugin_global_shortcut::Shortcut>() {
                     if let Err(e) = app.global_shortcut().register(shortcut) {
                         tracing::error!("Failed to register global shortcut: {:?}", e);
@@ -324,7 +342,9 @@ pub fn run() {
                 if let Some(window) = app_handle_fallback.get_webview_window("main") {
                     if !window.is_visible().unwrap_or(false) {
                         if let Some((x, y)) = crate::commands::ui::get_recorded_window_position() {
-                            let _ = window.set_position(tauri::Position::Physical(tauri::PhysicalPosition { x, y }));
+                            let _ = window.set_position(tauri::Position::Physical(
+                                tauri::PhysicalPosition { x, y },
+                            ));
                         }
                         let _ = window.show();
                         let _ = window.set_focus();
@@ -334,54 +354,57 @@ pub fn run() {
 
             Ok(())
         })
-        .on_window_event(move |window, event| {
-            match event {
-                tauri::WindowEvent::CloseRequested { api, .. } => {
-                    let label = window.label().to_string();
-                    if label == "settings" || label == "compare" || label == "onboarding" {
-                        api.prevent_close();
-                        let _ = window.hide();
-                        #[cfg(target_os = "macos")]
-                        {
-                            let app = window.app_handle();
-                            let is_visible = |w_label: &str| -> bool {
-                                if w_label == label {
-                                    false
-                                } else {
-                                    app.get_webview_window(w_label)
-                                        .and_then(|w| w.is_visible().ok())
-                                        .unwrap_or(false)
-                                }
-                            };
-                            if !is_visible("settings") && !is_visible("compare") && !is_visible("onboarding") {
-                                let _ = app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+        .on_window_event(move |window, event| match event {
+            tauri::WindowEvent::CloseRequested { api, .. } => {
+                let label = window.label().to_string();
+                if label == "settings" || label == "compare" || label == "onboarding" {
+                    api.prevent_close();
+                    let _ = window.hide();
+                    #[cfg(target_os = "macos")]
+                    {
+                        let app = window.app_handle();
+                        let is_visible = |w_label: &str| -> bool {
+                            if w_label == label {
+                                false
+                            } else {
+                                app.get_webview_window(w_label)
+                                    .and_then(|w| w.is_visible().ok())
+                                    .unwrap_or(false)
                             }
+                        };
+                        if !is_visible("settings")
+                            && !is_visible("compare")
+                            && !is_visible("onboarding")
+                        {
+                            let _ = app.set_activation_policy(tauri::ActivationPolicy::Accessory);
                         }
                     }
                 }
-                tauri::WindowEvent::Moved(pos) => {
-                    if window.label() == "main" {
+            }
+            tauri::WindowEvent::Moved(pos) => {
+                if window.label() == "main" {
+                    crate::commands::ui::record_window_position(pos.x, pos.y);
+                }
+            }
+            tauri::WindowEvent::Focused(false) => {
+                if window.label() == "main" {
+                    if let Ok(mut lock) = last_blur_instant_win.lock() {
+                        *lock = Some(Instant::now());
+                    }
+                    if let Ok(pos) = window.outer_position() {
                         crate::commands::ui::record_window_position(pos.x, pos.y);
                     }
-                }
-                tauri::WindowEvent::Focused(false) => {
-                    if window.label() == "main" {
-                        if let Ok(mut lock) = last_blur_instant_win.lock() {
-                            *lock = Some(Instant::now());
-                        }
-                        if let Ok(pos) = window.outer_position() {
-                            crate::commands::ui::record_window_position(pos.x, pos.y);
-                        }
-                        if let Some(db) = window.app_handle().try_state::<Arc<DatabaseManager>>() {
-                            let _ = crate::commands::ui::persist_window_position(&db);
-                        }
-                        if !crate::commands::ui::is_dialog_active() && crate::commands::ui::is_auto_hide_enabled() {
-                            let _ = window.hide();
-                        }
+                    if let Some(db) = window.app_handle().try_state::<Arc<DatabaseManager>>() {
+                        let _ = crate::commands::ui::persist_window_position(&db);
+                    }
+                    if !crate::commands::ui::is_dialog_active()
+                        && crate::commands::ui::is_auto_hide_enabled()
+                    {
+                        let _ = window.hide();
                     }
                 }
-                _ => {}
             }
+            _ => {}
         })
         .invoke_handler(tauri::generate_handler![
             commands::greet,
@@ -478,7 +501,9 @@ pub fn run() {
                 if let Some(window) = app_handle.get_webview_window("main") {
                     let _ = window.unminimize();
                     if let Some((x, y)) = crate::commands::ui::get_recorded_window_position() {
-                        let _ = window.set_position(tauri::Position::Physical(tauri::PhysicalPosition { x, y }));
+                        let _ = window.set_position(tauri::Position::Physical(
+                            tauri::PhysicalPosition { x, y },
+                        ));
                     }
                     let _ = window.show();
                     let _ = window.set_focus();

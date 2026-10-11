@@ -24,7 +24,7 @@ pub struct DownloadProgress {
 }
 
 /// Tracks per-model download state so pause/resume works correctly.
-/// 
+///
 /// Design: Pause does NOT hold the HTTP connection open (servers drop idle
 /// connections after 30-120s). Instead, pause sets a flag that causes the
 /// download loop to exit cleanly, flushing the .part file. Resume starts a
@@ -232,7 +232,8 @@ impl DownloadManager {
             bytes_downloaded: existing_bytes,
             total_bytes: model.download_size_bytes,
             percentage: if model.download_size_bytes > 0 {
-                ((existing_bytes as f32 / model.download_size_bytes as f32) * 100.0).clamp(0.0, 99.9)
+                ((existing_bytes as f32 / model.download_size_bytes as f32) * 100.0)
+                    .clamp(0.0, 99.9)
             } else {
                 0.0
             },
@@ -272,7 +273,12 @@ impl DownloadManager {
 
         // Apply a 30s timeout specifically to the initial connection + header handshake,
         // so we never hang indefinitely waiting for the server response headers.
-        let mut response = match tokio::time::timeout(std::time::Duration::from_secs(30), req.send()).await {
+        let mut response = match tokio::time::timeout(
+            std::time::Duration::from_secs(30),
+            req.send(),
+        )
+        .await
+        {
             Ok(Ok(resp)) => resp,
             Ok(Err(e)) => {
                 let err = format!("Network request failed: {}", e);
@@ -293,11 +299,18 @@ impl DownloadManager {
             let _ = std::fs::remove_file(&part_path);
             existing_bytes = 0;
             let fresh_req = client.get(&model.download_url);
-            response = match tokio::time::timeout(std::time::Duration::from_secs(30), fresh_req.send()).await {
-                Ok(Ok(resp)) => resp,
-                Ok(Err(e)) => return Err(format!("Network request failed: {}", e)),
-                Err(_) => return Err("Connection timed out waiting for server response (30s)".to_string()),
-            };
+            response =
+                match tokio::time::timeout(std::time::Duration::from_secs(30), fresh_req.send())
+                    .await
+                {
+                    Ok(Ok(resp)) => resp,
+                    Ok(Err(e)) => return Err(format!("Network request failed: {}", e)),
+                    Err(_) => {
+                        return Err(
+                            "Connection timed out waiting for server response (30s)".to_string()
+                        )
+                    }
+                };
         }
 
         let status = response.status();
@@ -308,42 +321,43 @@ impl DownloadManager {
             response.content_length()
         );
 
-        let (mut file, mut downloaded_bytes, total_bytes) =
-            if status == reqwest::StatusCode::PARTIAL_CONTENT {
-                // Server supports Range — append to existing .part file
-                let content_len = response.content_length().unwrap_or(0);
-                let total = existing_bytes + content_len;
-                let file = OpenOptions::new()
-                    .create(true)
-                    .append(true)
-                    .open(&part_path)
-                    .map_err(|e| format!("Failed to open .part file for append: {}", e))?;
-                (file, existing_bytes, total)
-            } else if status.is_success() {
-                // Server doesn't support Range or fresh download — start from scratch
-                let total = response
-                    .content_length()
-                    .unwrap_or(model.download_size_bytes);
-                let file = OpenOptions::new()
-                    .create(true)
-                    .write(true)
-                    .truncate(true)
-                    .open(&part_path)
-                    .map_err(|e| format!("Failed to open .part file: {}", e))?;
-                (file, 0u64, total)
-            } else {
-                let err = match status {
-                    reqwest::StatusCode::NOT_FOUND => {
-                        format!("Model file not found on Hugging Face (404 Not Found). The download URL may be invalid.")
-                    }
-                    reqwest::StatusCode::FORBIDDEN | reqwest::StatusCode::UNAUTHORIZED => {
-                        format!("Access denied by Hugging Face ({}). The repository may be gated or private.", status)
-                    }
-                    _ => format!("Server returned HTTP status {}", status),
-                };
-                tracing::error!("{}", err);
-                return Err(err);
+        let (mut file, mut downloaded_bytes, total_bytes) = if status
+            == reqwest::StatusCode::PARTIAL_CONTENT
+        {
+            // Server supports Range — append to existing .part file
+            let content_len = response.content_length().unwrap_or(0);
+            let total = existing_bytes + content_len;
+            let file = OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(&part_path)
+                .map_err(|e| format!("Failed to open .part file for append: {}", e))?;
+            (file, existing_bytes, total)
+        } else if status.is_success() {
+            // Server doesn't support Range or fresh download — start from scratch
+            let total = response
+                .content_length()
+                .unwrap_or(model.download_size_bytes);
+            let file = OpenOptions::new()
+                .create(true)
+                .write(true)
+                .truncate(true)
+                .open(&part_path)
+                .map_err(|e| format!("Failed to open .part file: {}", e))?;
+            (file, 0u64, total)
+        } else {
+            let err = match status {
+                reqwest::StatusCode::NOT_FOUND => {
+                    format!("Model file not found on Hugging Face (404 Not Found). The download URL may be invalid.")
+                }
+                reqwest::StatusCode::FORBIDDEN | reqwest::StatusCode::UNAUTHORIZED => {
+                    format!("Access denied by Hugging Face ({}). The repository may be gated or private.", status)
+                }
+                _ => format!("Server returned HTTP status {}", status),
             };
+            tracing::error!("{}", err);
+            return Err(err);
+        };
 
         // Emit initial progress so the UI shows the download bar immediately
         {
@@ -412,8 +426,7 @@ impl DownloadManager {
                 return Err("Download paused".to_string());
             }
 
-            let chunk =
-                chunk_result.map_err(|e| format!("Error receiving stream chunk: {}", e))?;
+            let chunk = chunk_result.map_err(|e| format!("Error receiving stream chunk: {}", e))?;
             file.write_all(&chunk)
                 .map_err(|e| format!("Failed to write chunk to disk: {}", e))?;
             downloaded_bytes += chunk.len() as u64;

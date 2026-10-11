@@ -39,31 +39,51 @@ impl Default for FileFilter {
             // Documents
             "pdf", "docx", "txt", "md", "markdown", "rst", "rtf", "log", "csv", "tsv",
             // Config & Data
-            "json", "yaml", "yml", "toml", "xml", "html", "htm", "sql",
-            // Code
-            "rs", "py", "js", "ts", "tsx", "jsx", "c", "cpp", "cc", "h", "hpp", "go",
-            "java", "kt", "swift", "rb", "php", "sh", "zsh", "bash", "css", "scss",
+            "json", "yaml", "yml", "toml", "xml", "html", "htm", "sql", // Code
+            "rs", "py", "js", "ts", "tsx", "jsx", "c", "cpp", "cc", "h", "hpp", "go", "java", "kt",
+            "swift", "rb", "php", "sh", "zsh", "bash", "css", "scss",
             // Images (Apple Vision OCR)
             "png", "jpg", "jpeg", "webp", "tiff", "tif", "bmp", "heic",
         ];
 
         let blacklisted_dirs = [
-            ".git", "node_modules", "target", "build", "dist", "out",
-            "Caches", "Pods", ".trash", ".Trash", ".venv", "venv",
-            "__pycache__", ".idea", ".vscode", ".next", ".nuxt", ".gradle",
+            ".git",
+            "node_modules",
+            "target",
+            "build",
+            "dist",
+            "out",
+            "Caches",
+            "Pods",
+            ".trash",
+            ".Trash",
+            ".venv",
+            "venv",
+            "__pycache__",
+            ".idea",
+            ".vscode",
+            ".next",
+            ".nuxt",
+            ".gradle",
             "Library/Caches",
         ];
 
         let blacklisted_exts = [
-            "app", "dmg", "pkg", "iso", "zip", "tar", "gz", "bz2", "xz", "7z", "rar",
-            "mp4", "mov", "avi", "mkv", "wmv", "mp3", "wav", "flac", "m4a", "aac",
-            "bin", "exe", "dylib", "so", "a", "o", "dll", "class", "pyc",
+            "app", "dmg", "pkg", "iso", "zip", "tar", "gz", "bz2", "xz", "7z", "rar", "mp4", "mov",
+            "avi", "mkv", "wmv", "mp3", "wav", "flac", "m4a", "aac", "bin", "exe", "dylib", "so",
+            "a", "o", "dll", "class", "pyc",
         ];
 
         Self {
             allowed_extensions: allowed.into_iter().map(|s| s.to_lowercase()).collect(),
-            blacklisted_dir_names: blacklisted_dirs.into_iter().map(|s| s.to_string()).collect(),
-            blacklisted_extensions: blacklisted_exts.into_iter().map(|s| s.to_lowercase()).collect(),
+            blacklisted_dir_names: blacklisted_dirs
+                .into_iter()
+                .map(|s| s.to_string())
+                .collect(),
+            blacklisted_extensions: blacklisted_exts
+                .into_iter()
+                .map(|s| s.to_lowercase())
+                .collect(),
             max_file_size_bytes: DEFAULT_MAX_FILE_SIZE,
             excluded_paths: Vec::new(),
         }
@@ -97,7 +117,10 @@ impl FileFilter {
             if file_name.starts_with('.') && file_name != "." && file_name != ".." {
                 return Some(FilterRejectionReason::HiddenFile(file_name.to_string()));
             }
-            if file_name.ends_with('~') || file_name.ends_with(".tmp") || file_name.starts_with("~$") {
+            if file_name.ends_with('~')
+                || file_name.ends_with(".tmp")
+                || file_name.starts_with("~$")
+            {
                 return Some(FilterRejectionReason::TemporaryFile(file_name.to_string()));
             }
         }
@@ -130,7 +153,11 @@ impl FileFilter {
         }
     }
 
-    pub fn should_index_path(&self, path: &Path, metadata: &Metadata) -> Result<(), FilterRejectionReason> {
+    pub fn should_index_path(
+        &self,
+        path: &Path,
+        metadata: &Metadata,
+    ) -> Result<(), FilterRejectionReason> {
         // 1. Directory and file name checks
         if let Some(reason) = self.is_ignored_path(path) {
             return Err(reason);
@@ -157,7 +184,9 @@ impl FileFilter {
             .to_lowercase();
 
         if ext.is_empty() {
-            return Err(FilterRejectionReason::DisallowedExtension("<no extension>".to_string()));
+            return Err(FilterRejectionReason::DisallowedExtension(
+                "<no extension>".to_string(),
+            ));
         }
 
         if self.blacklisted_extensions.contains(&ext) {

@@ -5,8 +5,8 @@ use serchx_lib::ingest::ocr::AppleVisionOcr;
 use serchx_lib::ingest::IngestionPipeline;
 use serchx_lib::models::WatchedFolder;
 use serchx_lib::safety::filters::{
-    is_watched_folder_blacklist_override, resolve_path_indexing_permission,
-    should_skip_directory, PathPermissionResult,
+    is_watched_folder_blacklist_override, resolve_path_indexing_permission, should_skip_directory,
+    PathPermissionResult,
 };
 use serchx_lib::safety::FileFilter;
 use std::fs::{self, File};
@@ -29,8 +29,14 @@ fn test_algorithm_blacklist_and_child_exception_override() {
     let blacklisted_roots = vec![a.clone()];
 
     // 1. A/C is an override child of blacklisted A
-    assert!(is_watched_folder_blacklist_override(&ac, &blacklisted_roots));
-    assert!(!is_watched_folder_blacklist_override(&a, &blacklisted_roots));
+    assert!(is_watched_folder_blacklist_override(
+        &ac,
+        &blacklisted_roots
+    ));
+    assert!(!is_watched_folder_blacklist_override(
+        &a,
+        &blacklisted_roots
+    ));
     assert!(!is_watched_folder_blacklist_override(
         &PathBuf::from("/workspace/other"),
         &blacklisted_roots
@@ -38,22 +44,42 @@ fn test_algorithm_blacklist_and_child_exception_override() {
 
     // 2. Directory pruning checks
     // Root A contains watched child A/C, so should NOT skip A during crawl descent
-    assert!(!should_skip_directory(&a, &watched_roots, &blacklisted_roots));
+    assert!(!should_skip_directory(
+        &a,
+        &watched_roots,
+        &blacklisted_roots
+    ));
 
     // A/B has no watched child inside it and is blacklisted -> SKIP descent
     let ab_dir = PathBuf::from("/workspace/A/B");
-    assert!(should_skip_directory(&ab_dir, &watched_roots, &blacklisted_roots));
+    assert!(should_skip_directory(
+        &ab_dir,
+        &watched_roots,
+        &blacklisted_roots
+    ));
 
     // A/C is watched child override -> DO NOT skip descent
-    assert!(!should_skip_directory(&ac, &watched_roots, &blacklisted_roots));
+    assert!(!should_skip_directory(
+        &ac,
+        &watched_roots,
+        &blacklisted_roots
+    ));
 
     // A/C/nested is under watched child override -> DO NOT skip descent
     let ac_nested_dir = PathBuf::from("/workspace/A/C/nested");
-    assert!(!should_skip_directory(&ac_nested_dir, &watched_roots, &blacklisted_roots));
+    assert!(!should_skip_directory(
+        &ac_nested_dir,
+        &watched_roots,
+        &blacklisted_roots
+    ));
 
     // A/D has no watched child inside it and is blacklisted -> SKIP descent
     let ad_dir = PathBuf::from("/workspace/A/D");
-    assert!(should_skip_directory(&ad_dir, &watched_roots, &blacklisted_roots));
+    assert!(should_skip_directory(
+        &ad_dir,
+        &watched_roots,
+        &blacklisted_roots
+    ));
 
     // 3. File permission resolution
     // A/B/file1.txt is outside watched roots (since only A/C is watched)
@@ -91,7 +117,11 @@ fn test_algorithm_blacklist_and_child_exception_override() {
         PathPermissionResult::Allowed
     );
     assert_eq!(
-        resolve_path_indexing_permission(&ac_nested_file, &watched_roots_with_a, &blacklisted_roots),
+        resolve_path_indexing_permission(
+            &ac_nested_file,
+            &watched_roots_with_a,
+            &blacklisted_roots
+        ),
         PathPermissionResult::Allowed
     );
 
@@ -144,7 +174,8 @@ fn test_crawler_respects_blacklist_and_child_override() {
         recursive: true,
         added_at: chrono::Utc::now().timestamp(),
         last_scanned_at: None,
-    }).unwrap();
+    })
+    .unwrap();
 
     // Verify DB state
     let blacklists = db.get_blacklist_folders().unwrap();
@@ -156,11 +187,11 @@ fn test_crawler_respects_blacklist_and_child_override() {
     assert_eq!(watched[0].path, dir_c.to_string_lossy());
 
     // Verify exception override detection helper
-    let is_override = is_watched_folder_blacklist_override(
-        &dir_c,
-        &[dir_a.clone()],
+    let is_override = is_watched_folder_blacklist_override(&dir_c, &[dir_a.clone()]);
+    assert!(
+        is_override,
+        "A/C must be flagged as a blacklist override child!"
     );
-    assert!(is_override, "A/C must be flagged as a blacklist override child!");
 
     // Construct Crawler Engine
     let extractors = Arc::new(ExtractorRegistry::new());
@@ -179,7 +210,10 @@ fn test_crawler_respects_blacklist_and_child_override() {
     let progress = engine.crawl_paths(&[dir_c.clone()]);
 
     // Exactly 2 files indexed: file2.txt and file3.txt
-    assert_eq!(progress.indexed_count, 2, "Only A/C/file2.txt and A/C/nested/file3.txt should be indexed");
+    assert_eq!(
+        progress.indexed_count, 2,
+        "Only A/C/file2.txt and A/C/nested/file3.txt should be indexed"
+    );
     assert_eq!(progress.failed_count, 0);
 
     // If crawl is triggered on parent root (or if A is traversed),
@@ -199,9 +233,13 @@ fn test_crawler_respects_blacklist_and_child_override() {
     assert_eq!(res_nested.len(), 1);
     assert!(res_nested[0].path.contains("file3.txt"));
 
-    let res_blocked_b = search.search("Secret blacklisted content in A/B", 10).unwrap();
+    let res_blocked_b = search
+        .search("Secret blacklisted content in A/B", 10)
+        .unwrap();
     assert_eq!(res_blocked_b.len(), 0, "A/B content must NOT be indexed");
 
-    let res_blocked_d = search.search("Secret blacklisted content in A/D", 10).unwrap();
+    let res_blocked_d = search
+        .search("Secret blacklisted content in A/D", 10)
+        .unwrap();
     assert_eq!(res_blocked_d.len(), 0, "A/D content must NOT be indexed");
 }

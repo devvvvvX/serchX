@@ -16,7 +16,6 @@ pub enum SearchError {
     Embed(String),
 }
 
-
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct SearchResult {
     pub chunk_id: String,
@@ -81,10 +80,7 @@ impl Fts5SearchEngine {
             return Ok(Vec::new());
         }
 
-        let conn = self
-            .db
-            .lock_conn()
-            .map_err(|e| SearchError::Db(e))?;
+        let conn = self.db.lock_conn().map_err(|e| SearchError::Db(e))?;
 
         let sql = r#"
             SELECT chunk_id, artifact_id, version_id, path,
@@ -125,9 +121,18 @@ mod tests {
 
     #[test]
     fn test_fts5_query_sanitization() {
-        assert_eq!(Fts5SearchEngine::sanitize_query("error_code:123*"), "\"error_code123\"");
-        assert_eq!(Fts5SearchEngine::sanitize_query("\"exact phrase\""), "\"exact phrase\"");
-        assert_eq!(Fts5SearchEngine::sanitize_query("invoice Apple"), "\"invoice\" AND \"Apple\"");
+        assert_eq!(
+            Fts5SearchEngine::sanitize_query("error_code:123*"),
+            "\"error_code123\""
+        );
+        assert_eq!(
+            Fts5SearchEngine::sanitize_query("\"exact phrase\""),
+            "\"exact phrase\""
+        );
+        assert_eq!(
+            Fts5SearchEngine::sanitize_query("invoice Apple"),
+            "\"invoice\" AND \"Apple\""
+        );
         assert_eq!(Fts5SearchEngine::sanitize_query("   "), "");
     }
 
@@ -137,7 +142,9 @@ mod tests {
         let search_engine = Fts5SearchEngine::new(db.clone());
 
         // Seed 100 sample chunks
-        let artifact = db.upsert_artifact("/Users/test/Documents/sample.txt", "file").unwrap();
+        let artifact = db
+            .upsert_artifact("/Users/test/Documents/sample.txt", "file")
+            .unwrap();
         let version_id = "v_sample_1";
         let version = ArtifactVersion {
             id: version_id.to_string(),
@@ -178,8 +185,15 @@ mod tests {
         let elapsed = start.elapsed();
 
         println!("FTS5 search latency: {:?}", elapsed);
-        assert!(elapsed.as_millis() < 50, "Query latency must be <50ms, took {:?}", elapsed);
-        assert!(!results.is_empty(), "Should return matching error code chunk");
+        assert!(
+            elapsed.as_millis() < 50,
+            "Query latency must be <50ms, took {:?}",
+            elapsed
+        );
+        assert!(
+            !results.is_empty(),
+            "Should return matching error code chunk"
+        );
         assert_eq!(results[0].chunk_id, "chunk_42");
         assert!(results[0].snippet.contains("<mark>ERR_AUTH_TIMEOUT</mark>"));
 

@@ -92,8 +92,8 @@ impl ModelCatalog {
     fn parse_quantization(filename: &str) -> String {
         let upper = filename.to_uppercase();
         for q in &[
-            "Q4_K_M", "Q4_K_S", "Q5_K_M", "Q5_K_S", "Q6_K", "Q8_0", "Q4_0", "Q4_1",
-            "Q2_K", "Q3_K_M", "Q3_K_L", "Q3_K_S", "Q5_0", "Q5_1", "FP16", "BF16",
+            "Q4_K_M", "Q4_K_S", "Q5_K_M", "Q5_K_S", "Q6_K", "Q8_0", "Q4_0", "Q4_1", "Q2_K",
+            "Q3_K_M", "Q3_K_L", "Q3_K_S", "Q5_0", "Q5_1", "FP16", "BF16",
         ] {
             if upper.contains(q) {
                 return q.to_string();
@@ -144,7 +144,10 @@ impl ModelCatalog {
                                 let path_str = path.to_string_lossy().to_string();
 
                                 // Skip if filename already registered
-                                if models.iter().any(|m| m.filename == file_name || m.filename == path_str) {
+                                if models
+                                    .iter()
+                                    .any(|m| m.filename == file_name || m.filename == path_str)
+                                {
                                     continue;
                                 }
 
@@ -159,9 +162,15 @@ impl ModelCatalog {
                                     format!("Custom: {}", clean_stem)
                                 };
                                 let id = if is_lmstudio {
-                                    format!("lmstudio-{}", clean_stem.to_lowercase().replace(' ', "-"))
+                                    format!(
+                                        "lmstudio-{}",
+                                        clean_stem.to_lowercase().replace(' ', "-")
+                                    )
                                 } else {
-                                    format!("custom-{}", clean_stem.to_lowercase().replace(' ', "-"))
+                                    format!(
+                                        "custom-{}",
+                                        clean_stem.to_lowercase().replace(' ', "-")
+                                    )
                                 };
 
                                 let is_active = id == active_model_id
@@ -198,7 +207,11 @@ impl ModelCatalog {
         // Update curated models status
         for item in &mut models {
             let path = models_dir.join(&item.filename);
-            item.is_downloaded = path.exists() && path.metadata().map(|m| m.len() > 10_000_000).unwrap_or(false);
+            item.is_downloaded = path.exists()
+                && path
+                    .metadata()
+                    .map(|m| m.len() > 10_000_000)
+                    .unwrap_or(false);
             item.is_active = item.id == active_model_id || item.filename == active_model_id;
         }
 
@@ -224,7 +237,10 @@ impl ModelCatalog {
         if !models.iter().any(|m| m.is_active) {
             if let Some(first_downloaded) = models.iter_mut().find(|m| m.is_downloaded) {
                 first_downloaded.is_active = true;
-            } else if let Some(default_item) = models.iter_mut().find(|m| m.id == "qwen2.5-1.5b-instruct-q4_k_m") {
+            } else if let Some(default_item) = models
+                .iter_mut()
+                .find(|m| m.id == "qwen2.5-1.5b-instruct-q4_k_m")
+            {
                 default_item.is_active = true;
             }
         }
@@ -242,11 +258,15 @@ mod tests {
     fn test_model_catalog() {
         let curated = ModelCatalog::curated_models();
         assert_eq!(curated.len(), 4);
-        assert!(curated[0].download_url.starts_with("https://huggingface.co"));
+        assert!(curated[0]
+            .download_url
+            .starts_with("https://huggingface.co"));
 
         let tmp = tempdir().unwrap();
         let models = ModelCatalog::discover_models(tmp.path(), "qwen2.5-1.5b-instruct-q4_k_m");
         assert!(models.len() >= 4);
-        assert!(models.iter().any(|m| m.is_active && m.id == "qwen2.5-1.5b-instruct-q4_k_m"));
+        assert!(models
+            .iter()
+            .any(|m| m.is_active && m.id == "qwen2.5-1.5b-instruct-q4_k_m"));
     }
 }

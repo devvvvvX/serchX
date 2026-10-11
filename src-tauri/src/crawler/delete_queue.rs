@@ -158,7 +158,12 @@ impl DeleteQueue {
     // ── Enqueue ───────────────────────────────────────────────────────────────
 
     /// Add a job and return its ID and control handle.
-    pub fn enqueue(&self, kind: DeleteJobKind, label: String, total: usize) -> (String, Arc<JobControl>) {
+    pub fn enqueue(
+        &self,
+        kind: DeleteJobKind,
+        label: String,
+        total: usize,
+    ) -> (String, Arc<JobControl>) {
         let id = uuid::Uuid::new_v4().to_string();
         let ctrl = Arc::new(JobControl::default());
 
@@ -171,7 +176,10 @@ impl DeleteQueue {
             label: label.clone(),
             queued_at: chrono::Utc::now().timestamp(),
             error: None,
-            can_requeue: matches!(kind, DeleteJobKind::FolderIndex { .. } | DeleteJobKind::RemoveFolder { .. }),
+            can_requeue: matches!(
+                kind,
+                DeleteJobKind::FolderIndex { .. } | DeleteJobKind::RemoveFolder { .. }
+            ),
         };
 
         tracing::info!(
@@ -306,7 +314,10 @@ impl DeleteQueue {
                 return true;
             }
         }
-        tracing::warn!("DeleteQueue: pause_job failed — job [{}] not found in active controls", id);
+        tracing::warn!(
+            "DeleteQueue: pause_job failed — job [{}] not found in active controls",
+            id
+        );
         false
     }
 
@@ -320,7 +331,10 @@ impl DeleteQueue {
                 return true;
             }
         }
-        tracing::warn!("DeleteQueue: resume_job failed — job [{}] not found in active controls", id);
+        tracing::warn!(
+            "DeleteQueue: resume_job failed — job [{}] not found in active controls",
+            id
+        );
         false
     }
 
@@ -334,7 +348,10 @@ impl DeleteQueue {
                 return true;
             }
         }
-        tracing::warn!("DeleteQueue: stop_job failed — job [{}] not found in active controls", id);
+        tracing::warn!(
+            "DeleteQueue: stop_job failed — job [{}] not found in active controls",
+            id
+        );
         false
     }
 

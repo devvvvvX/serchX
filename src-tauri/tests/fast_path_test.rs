@@ -23,12 +23,16 @@ fn test_metadata_fast_path_skips_unchanged_file() {
     let test_file = dir.path().join("sample_doc.txt");
     {
         let mut f = File::create(&test_file).unwrap();
-        f.write_all(b"Hello world! This is a test file for fast-path indexing.").unwrap();
+        f.write_all(b"Hello world! This is a test file for fast-path indexing.")
+            .unwrap();
     }
 
     // 1. Initial ingestion
     let res1 = pipeline.ingest_file(&test_file).expect("first ingest");
-    assert!(res1.is_new_version, "First ingestion should create a new version");
+    assert!(
+        res1.is_new_version,
+        "First ingestion should create a new version"
+    );
 
     // 2. Immediate second ingestion (Fast-path hit)
     let start = Instant::now();
@@ -70,11 +74,16 @@ fn test_metadata_fast_path_detects_mtime_change() {
 
     // Append new content
     {
-        let mut f = fs::OpenOptions::new().append(true).open(&test_file).unwrap();
+        let mut f = fs::OpenOptions::new()
+            .append(true)
+            .open(&test_file)
+            .unwrap();
         f.write_all(b" - Appended content").unwrap();
     }
 
-    let res2 = pipeline.ingest_file(&test_file).expect("second ingest after modification");
+    let res2 = pipeline
+        .ingest_file(&test_file)
+        .expect("second ingest after modification");
     assert!(
         res2.is_new_version,
         "Modified file must trigger a new version"
@@ -92,7 +101,12 @@ fn test_single_pass_streaming_crawler() {
     let ocr = Arc::new(AppleVisionOcr::new());
     let filter = Arc::new(FileFilter::default());
 
-    let pipeline = Arc::new(IngestionPipeline::with_filter(db.clone(), extractors, ocr, filter.clone()));
+    let pipeline = Arc::new(IngestionPipeline::with_filter(
+        db.clone(),
+        extractors,
+        ocr,
+        filter.clone(),
+    ));
     let controller = serchx_lib::crawler::CrawlController::new();
     let coordinator = Arc::new(serchx_lib::crawler::CrawlCoordinator::new(None));
 

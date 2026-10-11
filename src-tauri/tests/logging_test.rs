@@ -1,6 +1,4 @@
-use serchx_lib::logging::{
-    init_logging, rotate_log_files, LogRingBuffer, MAX_LOG_ARCHIVES,
-};
+use serchx_lib::logging::{init_logging, rotate_log_files, LogRingBuffer, MAX_LOG_ARCHIVES};
 use std::fs;
 use tempfile::tempdir;
 
@@ -65,7 +63,10 @@ fn test_logging_tracing_capture() {
 
     let lines = buffer.get_lines(None);
     assert!(
-        lines.iter().any(|l| l.contains("Test indexing trace event 1") || l.contains("Tracing logger initialized")),
+        lines
+            .iter()
+            .any(|l| l.contains("Test indexing trace event 1")
+                || l.contains("Tracing logger initialized")),
         "Expected tracing logs to be captured in ring buffer, got {:?}",
         lines
     );
@@ -77,7 +78,11 @@ fn test_log_export() {
     let logs_dir = dir.path().join("logs");
     fs::create_dir_all(&logs_dir).unwrap();
     let log_file = logs_dir.join("serchx.log");
-    fs::write(&log_file, "2026-10-08 INFO Indexing completed for 42 files\n").unwrap();
+    fs::write(
+        &log_file,
+        "2026-10-08 INFO Indexing completed for 42 files\n",
+    )
+    .unwrap();
 
     let export_dest = dir.path().join("exported_serchx.log");
     fs::copy(&log_file, &export_dest).unwrap();

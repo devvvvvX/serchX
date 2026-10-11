@@ -31,7 +31,10 @@ fn test_apple_vision_ocr_runner() {
     let resume = Path::new("/Users/hwaiting_dk/Documents/Important/Resume.png");
     if resume.exists() {
         let res = ocr.recognize_text(resume);
-        assert!(res.is_ok(), "Real image OCR must succeed without timing out");
+        assert!(
+            res.is_ok(),
+            "Real image OCR must succeed without timing out"
+        );
         let text = res.unwrap();
         assert!(!text.is_empty(), "Extracted text must not be empty");
     }
@@ -39,9 +42,15 @@ fn test_apple_vision_ocr_runner() {
     let excalidraw = Path::new("/Users/hwaiting_dk/Documents/Dropbox.excalidraw.png");
     if excalidraw.exists() {
         let res = ocr.recognize_text(excalidraw);
-        assert!(res.is_ok(), "Dropbox.excalidraw.png OCR must succeed without timing out");
+        assert!(
+            res.is_ok(),
+            "Dropbox.excalidraw.png OCR must succeed without timing out"
+        );
         let text = res.unwrap();
-        assert!(!text.is_empty(), "Extracted text from excalidraw must not be empty");
+        assert!(
+            !text.is_empty(),
+            "Extracted text from excalidraw must not be empty"
+        );
     }
 }
 
@@ -75,13 +84,17 @@ fn test_two_stage_progressive_indexing() {
     )
     .unwrap();
 
-    let res = pipeline.ingest_file(&sample_file).expect("Ingestion must succeed");
+    let res = pipeline
+        .ingest_file(&sample_file)
+        .expect("Ingestion must succeed");
     assert!(res.is_new_version);
     assert!(res.chunks_count >= 1);
 
     // Stage 1 Verification: FTS5 search index is populated IMMEDIATELY
     let fts = Fts5SearchEngine::new(db.clone());
-    let results = fts.search("quantum computing", 10).expect("FTS search should succeed");
+    let results = fts
+        .search("quantum computing", 10)
+        .expect("FTS search should succeed");
     assert_eq!(
         results.len(),
         1,
@@ -107,5 +120,8 @@ fn test_two_stage_progressive_indexing() {
     // Verify KNN search retrieves the embedded chunk
     let query_vec = embedder.embed_text("quantum computing").unwrap();
     let knn_results = vindex.search_knn(&query_vec, 5).unwrap();
-    assert!(!knn_results.is_empty(), "KNN search should return the background-embedded chunk");
+    assert!(
+        !knn_results.is_empty(),
+        "KNN search should return the background-embedded chunk"
+    );
 }

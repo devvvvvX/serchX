@@ -155,10 +155,20 @@ mod tests {
     #[test]
     fn test_ignored_path_filters() {
         assert!(FileSystemWatcher::is_ignored_path(Path::new(".DS_Store")));
-        assert!(FileSystemWatcher::is_ignored_path(Path::new("/Users/foo/.git/config")));
-        assert!(FileSystemWatcher::is_ignored_path(Path::new("/Users/foo/node_modules/pkg")));
-        assert!(FileSystemWatcher::is_ignored_path(Path::new("/Users/foo/file.tmp")));
-        assert!(!FileSystemWatcher::is_ignored_path(Path::new("/Users/foo/Documents/notes.txt")));
-        assert!(!FileSystemWatcher::is_ignored_path(Path::new("/Users/foo/Screenshots/app.png")));
+        assert!(FileSystemWatcher::is_ignored_path(Path::new(
+            "/Users/foo/.git/config"
+        )));
+        assert!(FileSystemWatcher::is_ignored_path(Path::new(
+            "/Users/foo/node_modules/pkg"
+        )));
+        assert!(FileSystemWatcher::is_ignored_path(Path::new(
+            "/Users/foo/file.tmp"
+        )));
+        assert!(!FileSystemWatcher::is_ignored_path(Path::new(
+            "/Users/foo/Documents/notes.txt"
+        )));
+        assert!(!FileSystemWatcher::is_ignored_path(Path::new(
+            "/Users/foo/Screenshots/app.png"
+        )));
     }
 }

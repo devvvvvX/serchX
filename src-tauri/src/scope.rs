@@ -68,7 +68,10 @@ pub mod tests {
         let dl_scope = scopes.iter().find(|s| s.display_name == "Downloads");
         assert!(dl_scope.is_some());
         let dl = dl_scope.unwrap();
-        assert!(!dl.enabled_by_default, "Downloads must be disabled by default (SCOPE-02)");
+        assert!(
+            !dl.enabled_by_default,
+            "Downloads must be disabled by default (SCOPE-02)"
+        );
         assert!(dl.is_opt_in, "Downloads must be opt-in (SCOPE-02)");
     }
 }

@@ -10,13 +10,27 @@ pub fn generate_markdown_report(result: &BenchmarkResult) -> String {
     md.push_str("### Hardware & Resource Telemetry\n\n");
     md.push_str("| Metric | Value | Release Budget / Target |\n");
     md.push_str("|---|---|---|\n");
-    md.push_str(&format!("| **p50 Latency** | {:.2} ms | < 50 ms |\n", result.latency_p50_ms));
-    md.push_str(&format!("| **p95 Latency** | {:.2} ms | < 200 ms |\n", result.latency_p95_ms));
-    md.push_str(&format!("| **Peak Resident RAM (RSS)** | {:.2} MB | < 500 MB (Apple Silicon) |\n", result.peak_rss_mb));
-    md.push_str(&format!("| **SQLite Storage Footprint** | {:.2} MB | Storage proportional to corpus |\n\n", result.db_size_mb));
+    md.push_str(&format!(
+        "| **p50 Latency** | {:.2} ms | < 50 ms |\n",
+        result.latency_p50_ms
+    ));
+    md.push_str(&format!(
+        "| **p95 Latency** | {:.2} ms | < 200 ms |\n",
+        result.latency_p95_ms
+    ));
+    md.push_str(&format!(
+        "| **Peak Resident RAM (RSS)** | {:.2} MB | < 500 MB (Apple Silicon) |\n",
+        result.peak_rss_mb
+    ));
+    md.push_str(&format!(
+        "| **SQLite Storage Footprint** | {:.2} MB | Storage proportional to corpus |\n\n",
+        result.db_size_mb
+    ));
 
     md.push_str("### Category Retrieval Accuracy & Release Gates\n\n");
-    md.push_str("| Category | Queries | Recall@1 | Recall@3 | Recall@5 | MRR | Gate Threshold | Status |\n");
+    md.push_str(
+        "| Category | Queries | Recall@1 | Recall@3 | Recall@5 | MRR | Gate Threshold | Status |\n",
+    );
     md.push_str("|---|---|---|---|---|---|---|---|\n");
 
     for c in &result.categories {
@@ -45,7 +59,9 @@ pub fn generate_markdown_report(result: &BenchmarkResult) -> String {
     md.push_str("2. **Version Recall**: Recall@3 ≥ 85%, MRR ≥ 0.80 (Myers diff change predicate candidate injection).\n");
     md.push_str("3. **Temporal Recency**: Recall@3 ≥ 85%, MRR ≥ 0.80 (Date range filtering & recency decay).\n");
     md.push_str("4. **Semantic Hybrid**: Recall@3 ≥ 80% (Reciprocal Rank Fusion k=60 combining FTS5 + Vector kNN).\n");
-    md.push_str("5. **OCR Screenshot**: Recall@3 ≥ 80% (Apple Vision OCR on-device text extraction).\n");
+    md.push_str(
+        "5. **OCR Screenshot**: Recall@3 ≥ 80% (Apple Vision OCR on-device text extraction).\n",
+    );
     md.push_str("6. **Person / Source**: Advisory evaluation for conversational author cues.\n");
     md.push_str("7. **Overall Latency**: p95 search latency strictly < 200 ms.\n");
 
@@ -65,11 +81,26 @@ pub struct IndexingBenchmarkReport {
 pub fn generate_indexing_benchmark_report(report: &IndexingBenchmarkReport) -> String {
     let mut md = String::new();
     md.push_str("# serchX Indexing Performance Benchmark Report\n\n");
-    md.push_str(&format!("- **Total Files Indexed:** {}\n", report.total_files));
-    md.push_str(&format!("- **Total Time:** {} ms ({:.1} files/sec)\n", report.elapsed_ms, report.files_per_second));
-    md.push_str(&format!("- **Speedup vs Single-Thread Baseline:** {:.1}x\n", report.speedup_factor));
-    md.push_str(&format!("- **FTS5 Verified Entries:** {}\n", report.fts_indexed_count));
-    md.push_str(&format!("- **SQLite Lock Errors:** {}\n\n", report.lock_contention_errors));
+    md.push_str(&format!(
+        "- **Total Files Indexed:** {}\n",
+        report.total_files
+    ));
+    md.push_str(&format!(
+        "- **Total Time:** {} ms ({:.1} files/sec)\n",
+        report.elapsed_ms, report.files_per_second
+    ));
+    md.push_str(&format!(
+        "- **Speedup vs Single-Thread Baseline:** {:.1}x\n",
+        report.speedup_factor
+    ));
+    md.push_str(&format!(
+        "- **FTS5 Verified Entries:** {}\n",
+        report.fts_indexed_count
+    ));
+    md.push_str(&format!(
+        "- **SQLite Lock Errors:** {}\n\n",
+        report.lock_contention_errors
+    ));
     md
 }
 
@@ -95,7 +126,10 @@ mod tests {
             let path = format!("/Users/bench/doc_{}.txt", i);
             let art_id = format!("art-{}", i);
             let ver_id = format!("ver-{}", i);
-            let content = format!("Benchmark document {} content with unique keyword term_{}", i, i);
+            let content = format!(
+                "Benchmark document {} content with unique keyword term_{}",
+                i, i
+            );
 
             let version = ArtifactVersion {
                 id: ver_id.clone(),

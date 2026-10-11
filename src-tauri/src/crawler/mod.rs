@@ -113,7 +113,9 @@ impl CrawlerEngine {
 
         tracing::info!("crawl_paths: started for paths: {:?}", paths);
 
-        let is_coord_paused = self.coordinator.as_ref()
+        let is_coord_paused = self
+            .coordinator
+            .as_ref()
             .map(|c| c.is_paused())
             .unwrap_or(false);
 
@@ -148,17 +150,19 @@ impl CrawlerEngine {
             .map(|b| PathBuf::from(b.path))
             .collect();
 
-        let watched_roots: Vec<PathBuf> = if let Ok(folders) = self.pipeline.db().get_watched_folders() {
-            let mut w_set: Vec<PathBuf> = folders.into_iter().map(|f| PathBuf::from(f.path)).collect();
-            for p in paths {
-                if !w_set.contains(p) {
-                    w_set.push(p.clone());
+        let watched_roots: Vec<PathBuf> =
+            if let Ok(folders) = self.pipeline.db().get_watched_folders() {
+                let mut w_set: Vec<PathBuf> =
+                    folders.into_iter().map(|f| PathBuf::from(f.path)).collect();
+                for p in paths {
+                    if !w_set.contains(p) {
+                        w_set.push(p.clone());
+                    }
                 }
-            }
-            w_set
-        } else {
-            paths.to_vec()
-        };
+                w_set
+            } else {
+                paths.to_vec()
+            };
 
         let mut files_processed = 0usize;
 
@@ -193,7 +197,11 @@ impl CrawlerEngine {
                 coord.start_folder_analysis(&root_str);
             }
 
-            let analysis_res = crate::commands::onboarding::analyze_folder_path(&root_str, true, &self.pipeline.db());
+            let analysis_res = crate::commands::onboarding::analyze_folder_path(
+                &root_str,
+                true,
+                &self.pipeline.db(),
+            );
 
             // Check if cancelled during analysis
             if let Some(ref coord) = self.coordinator {
@@ -215,7 +223,11 @@ impl CrawlerEngine {
                     count
                 }
                 Err(err) => {
-                    tracing::warn!("crawl_paths: folder analysis failed for {}: {}", root_str, err);
+                    tracing::warn!(
+                        "crawl_paths: folder analysis failed for {}: {}",
+                        root_str,
+                        err
+                    );
                     0
                 }
             };
@@ -248,7 +260,8 @@ impl CrawlerEngine {
 
             let (work_tx, work_rx) = std::sync::mpsc::sync_channel::<PathBuf>(512);
             let work_rx = Arc::new(std::sync::Mutex::new(work_rx));
-            let (batch_tx, batch_rx) = std::sync::mpsc::sync_channel::<crate::db::IngestionBatchItem>(512);
+            let (batch_tx, batch_rx) =
+                std::sync::mpsc::sync_channel::<crate::db::IngestionBatchItem>(512);
 
             let pipeline_clone = self.pipeline.clone();
             let writer_handle = std::thread::spawn(move || {
@@ -357,7 +370,8 @@ impl CrawlerEngine {
                                 }
                                 Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
                                     Err(IngestionError::Extraction(
-                                        "File extraction thread terminated unexpectedly".to_string(),
+                                        "File extraction thread terminated unexpectedly"
+                                            .to_string(),
                                     ))
                                 }
                             },
@@ -374,14 +388,21 @@ impl CrawlerEngine {
 
                         match extract_result {
                             Ok(Some(item)) => {
-                                tracing::debug!("crawl_paths: successfully extracted item for: {}", path_string);
+                                tracing::debug!(
+                                    "crawl_paths: successfully extracted item for: {}",
+                                    path_string
+                                );
                                 let _ = batch_tx.send(item);
                                 if let Ok(mut p) = progress.write() {
                                     p.indexed_count += 1;
                                     p.current_file = Some(path_string.clone());
                                 }
                                 if let Some(ref coord) = coordinator {
-                                    coord.record_file_progress(&path_string, FileProcessStatus::Indexed, file_size);
+                                    coord.record_file_progress(
+                                        &path_string,
+                                        FileProcessStatus::Indexed,
+                                        file_size,
+                                    );
                                 }
                                 let _ = pipeline.db().remove_dead_letter_by_path(&path_string);
                             }
@@ -390,35 +411,64 @@ impl CrawlerEngine {
                                     p.skipped_count += 1;
                                 }
                                 if let Some(ref coord) = coordinator {
-                                    coord.record_file_progress(&path_string, FileProcessStatus::Skipped, file_size);
+                                    coord.record_file_progress(
+                                        &path_string,
+                                        FileProcessStatus::Skipped,
+                                        file_size,
+                                    );
                                 }
                             }
                             Err(IngestionError::Filtered(reason)) => {
-                                tracing::info!("crawl_paths: file {} filtered: {}", path_string, reason);
+                                tracing::info!(
+                                    "crawl_paths: file {} filtered: {}",
+                                    path_string,
+                                    reason
+                                );
                                 if let Ok(mut p) = progress.write() {
                                     p.skipped_count += 1;
                                 }
                                 if let Some(ref coord) = coordinator {
-                                    coord.record_file_progress(&path_string, FileProcessStatus::Skipped, file_size);
+                                    coord.record_file_progress(
+                                        &path_string,
+                                        FileProcessStatus::Skipped,
+                                        file_size,
+                                    );
                                 }
                             }
                             Err(IngestionError::UnsupportedFormat(reason)) => {
-                                tracing::info!("crawl_paths: file {} unsupported: {}", path_string, reason);
+                                tracing::info!(
+                                    "crawl_paths: file {} unsupported: {}",
+                                    path_string,
+                                    reason
+                                );
                                 if let Ok(mut p) = progress.write() {
                                     p.skipped_count += 1;
                                 }
                                 if let Some(ref coord) = coordinator {
-                                    coord.record_file_progress(&path_string, FileProcessStatus::Skipped, file_size);
+                                    coord.record_file_progress(
+                                        &path_string,
+                                        FileProcessStatus::Skipped,
+                                        file_size,
+                                    );
                                 }
                             }
                             Err(IngestionError::Timeout(secs, ref details)) => {
-                                tracing::warn!("crawl_paths: file {} timed out after {}s: {}", path_string, secs, details);
+                                tracing::warn!(
+                                    "crawl_paths: file {} timed out after {}s: {}",
+                                    path_string,
+                                    secs,
+                                    details
+                                );
                                 if let Ok(mut p) = progress.write() {
                                     p.failed_count += 1;
                                     p.timed_out_count += 1;
                                 }
                                 if let Some(ref coord) = coordinator {
-                                    coord.record_file_progress(&path_string, FileProcessStatus::TimedOut, file_size);
+                                    coord.record_file_progress(
+                                        &path_string,
+                                        FileProcessStatus::TimedOut,
+                                        file_size,
+                                    );
                                 }
                                 let dlq_item = crate::models::DeadLetterItem {
                                     id: uuid::Uuid::new_v4().to_string(),
@@ -426,22 +476,38 @@ impl CrawlerEngine {
                                     file_name: file_name.clone(),
                                     file_size,
                                     error_type: "Timeout".to_string(),
-                                    error_message: format!("Processing timed out after {} seconds", secs),
+                                    error_message: format!(
+                                        "Processing timed out after {} seconds",
+                                        secs
+                                    ),
                                     failed_at: chrono::Utc::now().timestamp(),
                                     retry_count: 1,
                                     status: "pending".to_string(),
                                 };
-                                if let Err(e) = pipeline.db().insert_or_update_dead_letter(&dlq_item) {
-                                    tracing::error!("Failed to record file in dead letter queue: {}", e);
+                                if let Err(e) =
+                                    pipeline.db().insert_or_update_dead_letter(&dlq_item)
+                                {
+                                    tracing::error!(
+                                        "Failed to record file in dead letter queue: {}",
+                                        e
+                                    );
                                 }
                             }
                             Err(e) => {
-                                tracing::error!("crawl_paths: error processing {}: {:?}", path_string, e);
+                                tracing::error!(
+                                    "crawl_paths: error processing {}: {:?}",
+                                    path_string,
+                                    e
+                                );
                                 if let Ok(mut p) = progress.write() {
                                     p.failed_count += 1;
                                 }
                                 if let Some(ref coord) = coordinator {
-                                    coord.record_file_progress(&path_string, FileProcessStatus::Error, file_size);
+                                    coord.record_file_progress(
+                                        &path_string,
+                                        FileProcessStatus::Error,
+                                        file_size,
+                                    );
                                 }
                                 let err_type = match &e {
                                     IngestionError::Io(_) => "IO",
@@ -461,8 +527,13 @@ impl CrawlerEngine {
                                     retry_count: 1,
                                     status: "pending".to_string(),
                                 };
-                                if let Err(err) = pipeline.db().insert_or_update_dead_letter(&dlq_item) {
-                                    tracing::error!("Failed to record file in dead letter queue: {}", err);
+                                if let Err(err) =
+                                    pipeline.db().insert_or_update_dead_letter(&dlq_item)
+                                {
+                                    tracing::error!(
+                                        "Failed to record file in dead letter queue: {}",
+                                        err
+                                    );
                                 }
                             }
                         }
@@ -496,7 +567,8 @@ impl CrawlerEngine {
                         }
                         if e.depth() > 0 {
                             let name = e.file_name().to_string_lossy();
-                            if name.starts_with('.') || filter_walk.is_ignored_directory_name(&name) {
+                            if name.starts_with('.') || filter_walk.is_ignored_directory_name(&name)
+                            {
                                 return false;
                             }
                         }
@@ -509,7 +581,9 @@ impl CrawlerEngine {
 
             for entry_res in walker {
                 if self.controller.is_stopped() {
-                    tracing::info!("crawl_paths: crawler stopped by controller, breaking walker loop");
+                    tracing::info!(
+                        "crawl_paths: crawler stopped by controller, breaking walker loop"
+                    );
                     break;
                 }
 
@@ -540,12 +614,23 @@ impl CrawlerEngine {
                     Some(n) => n,
                     None => continue,
                 };
-                if file_name.starts_with('.') || file_name.ends_with('~') || file_name.ends_with(".tmp") || file_name.starts_with("~$") {
+                if file_name.starts_with('.')
+                    || file_name.ends_with('~')
+                    || file_name.ends_with(".tmp")
+                    || file_name.starts_with("~$")
+                {
                     continue;
                 }
 
-                let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase();
-                if ext.is_empty() || !filter.allowed_extensions.contains(&ext) || filter.blacklisted_extensions.contains(&ext) {
+                let ext = path
+                    .extension()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or("")
+                    .to_lowercase();
+                if ext.is_empty()
+                    || !filter.allowed_extensions.contains(&ext)
+                    || filter.blacklisted_extensions.contains(&ext)
+                {
                     if let Ok(mut p) = self.progress.write() {
                         p.skipped_count += 1;
                     }
@@ -563,7 +648,11 @@ impl CrawlerEngine {
                     }
                     if let Some(ref coord) = self.coordinator {
                         let file_size = std::fs::metadata(path).map(|m| m.len()).unwrap_or(0);
-                        coord.record_file_progress(&path.to_string_lossy(), FileProcessStatus::Skipped, file_size);
+                        coord.record_file_progress(
+                            &path.to_string_lossy(),
+                            FileProcessStatus::Skipped,
+                            file_size,
+                        );
                     }
                     continue;
                 }
@@ -589,16 +678,26 @@ impl CrawlerEngine {
             }
 
             drop(work_tx);
-            tracing::info!("crawl_paths: finished discovering files for {:?}. Waiting for {} workers to join.", root, worker_handles.len());
+            tracing::info!(
+                "crawl_paths: finished discovering files for {:?}. Waiting for {} workers to join.",
+                root,
+                worker_handles.len()
+            );
             for h in worker_handles {
                 let _ = h.join();
             }
             tracing::info!("crawl_paths: workers joined. Waiting for writer thread.");
             let _ = writer_handle.join();
-            tracing::info!("crawl_paths: writer thread joined. Folder crawl complete for {:?}", root);
+            tracing::info!(
+                "crawl_paths: writer thread joined. Folder crawl complete for {:?}",
+                root
+            );
 
             let now = chrono::Utc::now().timestamp();
-            let _ = self.pipeline.db().update_watched_folder_last_scanned(&root.to_string_lossy(), now);
+            let _ = self
+                .pipeline
+                .db()
+                .update_watched_folder_last_scanned(&root.to_string_lossy(), now);
             if let Some(ref coord) = self.coordinator {
                 coord.complete_folder_crawl(&root.to_string_lossy(), true);
             }
@@ -638,11 +737,19 @@ pub mod tests {
         // Create sample files
         let valid_doc = root.join("notes.txt");
         let mut f1 = File::create(&valid_doc).unwrap();
-        writeln!(f1, "Important meeting notes about project scope and timelines.").unwrap();
+        writeln!(
+            f1,
+            "Important meeting notes about project scope and timelines."
+        )
+        .unwrap();
 
         let valid_md = root.join("README.md");
         let mut f2 = File::create(&valid_md).unwrap();
-        writeln!(f2, "# Architecture Overview\nSystem components and details.").unwrap();
+        writeln!(
+            f2,
+            "# Architecture Overview\nSystem components and details."
+        )
+        .unwrap();
 
         // Create a blacklisted dir
         let git_dir = root.join(".git");
@@ -725,7 +832,6 @@ pub mod tests {
         // Trigger resume
         engine.resume();
         assert!(!engine.get_progress().is_paused);
-
 
         handle.join().unwrap();
         let final_progress = engine.get_progress();

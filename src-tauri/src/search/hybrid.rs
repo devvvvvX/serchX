@@ -13,12 +13,24 @@ use std::sync::Arc;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum MatchReason {
-    ExactKeyword { terms: Vec<String> },
-    SemanticSimilarity { score: f32 },
-    TimeRangeMatch { label: String },
-    TypeMatch { extension: String },
-    PathMatch { folder: String },
-    VersionCue { cue: String },
+    ExactKeyword {
+        terms: Vec<String>,
+    },
+    SemanticSimilarity {
+        score: f32,
+    },
+    TimeRangeMatch {
+        label: String,
+    },
+    TypeMatch {
+        extension: String,
+    },
+    PathMatch {
+        folder: String,
+    },
+    VersionCue {
+        cue: String,
+    },
     VersionRelationship {
         version_number: usize,
         total_versions: usize,
@@ -142,19 +154,22 @@ impl HybridSearchEngine {
 
         if let Ok(fts_results) = self.fts.search(&fts_query, limit * 2) {
             for (idx, r) in fts_results.into_iter().enumerate() {
-                let entry = candidates.entry(r.chunk_id.clone()).or_insert_with(|| CandidateAccumulator {
-                    chunk_id: r.chunk_id.clone(),
-                    artifact_id: r.artifact_id.clone(),
-                    version_id: r.version_id.clone(),
-                    path: r.path.clone(),
-                    snippet: r.snippet.clone(),
-                    modified_at: 0,
-                    is_pinned: false,
-                    fts_rank: None,
-                    vector_rank: None,
-                    vector_sim: None,
-                    matched_exact_terms: Vec::new(),
-                });
+                let entry =
+                    candidates
+                        .entry(r.chunk_id.clone())
+                        .or_insert_with(|| CandidateAccumulator {
+                            chunk_id: r.chunk_id.clone(),
+                            artifact_id: r.artifact_id.clone(),
+                            version_id: r.version_id.clone(),
+                            path: r.path.clone(),
+                            snippet: r.snippet.clone(),
+                            modified_at: 0,
+                            is_pinned: false,
+                            fts_rank: None,
+                            vector_rank: None,
+                            vector_sim: None,
+                            matched_exact_terms: Vec::new(),
+                        });
                 entry.fts_rank = Some(idx + 1);
                 if !parsed.exact_phrases.is_empty() {
                     entry.matched_exact_terms = parsed.exact_phrases.clone();
@@ -168,18 +183,20 @@ impl HybridSearchEngine {
                 if let Ok(query_vec) = model.embed_text(&parsed.clean_text) {
                     if let Ok(vec_results) = self.vector_index.search_knn(&query_vec, limit * 2) {
                         for (idx, (chunk_id, sim)) in vec_results.into_iter().enumerate() {
-                            let entry = candidates.entry(chunk_id.clone()).or_insert_with(|| CandidateAccumulator {
-                                chunk_id: chunk_id.clone(),
-                                artifact_id: String::new(),
-                                version_id: String::new(),
-                                path: String::new(),
-                                snippet: String::new(),
-                                modified_at: 0,
-                                is_pinned: false,
-                                fts_rank: None,
-                                vector_rank: None,
-                                vector_sim: None,
-                                matched_exact_terms: Vec::new(),
+                            let entry = candidates.entry(chunk_id.clone()).or_insert_with(|| {
+                                CandidateAccumulator {
+                                    chunk_id: chunk_id.clone(),
+                                    artifact_id: String::new(),
+                                    version_id: String::new(),
+                                    path: String::new(),
+                                    snippet: String::new(),
+                                    modified_at: 0,
+                                    is_pinned: false,
+                                    fts_rank: None,
+                                    vector_rank: None,
+                                    vector_sim: None,
+                                    matched_exact_terms: Vec::new(),
+                                }
                             });
                             entry.vector_rank = Some(idx + 1);
                             entry.vector_sim = Some(sim);
@@ -278,7 +295,10 @@ impl HybridSearchEngine {
                             let reason = MatchReason::VersionRelationship {
                                 version_number: target_ord as usize,
                                 total_versions,
-                                relation_summary: format!("Matches explicit version v{}", target_ord),
+                                relation_summary: format!(
+                                    "Matches explicit version v{}",
+                                    target_ord
+                                ),
                                 matched_diff_snippet: None,
                                 later_version_date: if (target_ord as usize) < total_versions {
                                     Some(versions[target_ord as usize].modified_at)
@@ -302,7 +322,9 @@ impl HybridSearchEngine {
                             } else {
                                 let text_a = v_a.extracted_text.as_deref().unwrap_or("");
                                 let text_b = v_b.extracted_text.as_deref().unwrap_or("");
-                                let computed = self.diff_engine.compute_diff(text_a, text_b, &v_a.id, &v_b.id);
+                                let computed = self
+                                    .diff_engine
+                                    .compute_diff(text_a, text_b, &v_a.id, &v_b.id);
                                 self.diff_cache.put(computed.clone());
                                 computed
                             };
@@ -316,18 +338,30 @@ impl HybridSearchEngine {
                                 ChangeDirection::Before => {
                                     if let Some(ref target) = d_cue.target_subject {
                                         let words: Vec<&str> = target.split_whitespace().collect();
-                                        let matches_term = words.iter().any(|w| diff.removed_terms.contains(&w.to_lowercase()));
+                                        let matches_term = words.iter().any(|w| {
+                                            diff.removed_terms.contains(&w.to_lowercase())
+                                        });
                                         if matches_term {
                                             target_ver = Some(v_a);
                                             target_ver_idx = i + 1;
-                                            relation_text = format!("Preserved before '{}' was modified/removed", target);
+                                            relation_text = format!(
+                                                "Preserved before '{}' was modified/removed",
+                                                target
+                                            );
                                             let mut snippet_lines = Vec::new();
                                             for hunk in &diff.hunks {
-                                                if hunk.tag == "removed" && words.iter().any(|w| hunk.content.to_lowercase().contains(&w.to_lowercase())) {
+                                                if hunk.tag == "removed"
+                                                    && words.iter().any(|w| {
+                                                        hunk.content
+                                                            .to_lowercase()
+                                                            .contains(&w.to_lowercase())
+                                                    })
+                                                {
                                                     for line in hunk.content.lines().take(3) {
                                                         let trimmed = line.trim();
                                                         if !trimmed.is_empty() {
-                                                            snippet_lines.push(format!("- {}", trimmed));
+                                                            snippet_lines
+                                                                .push(format!("- {}", trimmed));
                                                         }
                                                     }
                                                     break;
@@ -340,24 +374,37 @@ impl HybridSearchEngine {
                                     } else {
                                         target_ver = Some(v_a);
                                         target_ver_idx = i + 1;
-                                        relation_text = "Preserved prior to subsequent revision".to_string();
+                                        relation_text =
+                                            "Preserved prior to subsequent revision".to_string();
                                     }
                                 }
                                 ChangeDirection::After => {
                                     if let Some(ref target) = d_cue.target_subject {
                                         let words: Vec<&str> = target.split_whitespace().collect();
-                                        let matches_term = words.iter().any(|w| diff.added_terms.contains(&w.to_lowercase()));
+                                        let matches_term = words
+                                            .iter()
+                                            .any(|w| diff.added_terms.contains(&w.to_lowercase()));
                                         if matches_term {
                                             target_ver = Some(v_b);
                                             target_ver_idx = i + 2;
-                                            relation_text = format!("Introduced in revision containing '{}'", target);
+                                            relation_text = format!(
+                                                "Introduced in revision containing '{}'",
+                                                target
+                                            );
                                             let mut snippet_lines = Vec::new();
                                             for hunk in &diff.hunks {
-                                                if hunk.tag == "added" && words.iter().any(|w| hunk.content.to_lowercase().contains(&w.to_lowercase())) {
+                                                if hunk.tag == "added"
+                                                    && words.iter().any(|w| {
+                                                        hunk.content
+                                                            .to_lowercase()
+                                                            .contains(&w.to_lowercase())
+                                                    })
+                                                {
                                                     for line in hunk.content.lines().take(3) {
                                                         let trimmed = line.trim();
                                                         if !trimmed.is_empty() {
-                                                            snippet_lines.push(format!("+ {}", trimmed));
+                                                            snippet_lines
+                                                                .push(format!("+ {}", trimmed));
                                                         }
                                                     }
                                                     break;
@@ -370,7 +417,8 @@ impl HybridSearchEngine {
                                     } else {
                                         target_ver = Some(v_b);
                                         target_ver_idx = i + 2;
-                                        relation_text = "Updated version in document history".to_string();
+                                        relation_text =
+                                            "Updated version in document history".to_string();
                                     }
                                 }
                             }
@@ -391,9 +439,12 @@ impl HybridSearchEngine {
                                 version_boosts.insert(matched_v.id.clone(), (1.50, reason));
 
                                 // Candidate injection: if target version chunk not in candidates, inject first chunk
-                                let already_present = candidates.values().any(|c| c.version_id == matched_v.id);
+                                let already_present =
+                                    candidates.values().any(|c| c.version_id == matched_v.id);
                                 if !already_present {
-                                    if let Ok(chunks) = self.db.get_chunks_for_version(&matched_v.id) {
+                                    if let Ok(chunks) =
+                                        self.db.get_chunks_for_version(&matched_v.id)
+                                    {
                                         if let Some(first_chunk) = chunks.into_iter().next() {
                                             let snippet = if first_chunk.content.len() > 200 {
                                                 first_chunk.content[..200].to_string()
@@ -447,7 +498,11 @@ impl HybridSearchEngine {
                 let terms = if !cand.matched_exact_terms.is_empty() {
                     cand.matched_exact_terms.clone()
                 } else {
-                    parsed.clean_text.split_whitespace().map(|s| s.to_string()).collect()
+                    parsed
+                        .clean_text
+                        .split_whitespace()
+                        .map(|s| s.to_string())
+                        .collect()
                 };
                 reasons.push(MatchReason::ExactKeyword { terms });
             }
@@ -475,7 +530,11 @@ impl HybridSearchEngine {
             if !parsed.type_extensions.is_empty() {
                 if let Some(ext) = Path::new(&cand.path).extension().and_then(|e| e.to_str()) {
                     let ext_lower = ext.to_lowercase();
-                    if parsed.type_extensions.iter().any(|t| t.to_lowercase() == ext_lower) {
+                    if parsed
+                        .type_extensions
+                        .iter()
+                        .any(|t| t.to_lowercase() == ext_lower)
+                    {
                         boost *= 1.25;
                         reasons.push(MatchReason::TypeMatch {
                             extension: ext_lower,
@@ -528,13 +587,20 @@ impl HybridSearchEngine {
         }
 
         // Sort descending by score
-        scored_results.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(std::cmp::Ordering::Equal));
+        scored_results.sort_by(|a, b| {
+            b.score
+                .partial_cmp(&a.score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
         scored_results.truncate(limit);
 
         Ok(scored_results)
     }
 
-    pub fn group_results_by_artifact(&self, results: Vec<HybridSearchResult>) -> Vec<GroupedSearchResult> {
+    pub fn group_results_by_artifact(
+        &self,
+        results: Vec<HybridSearchResult>,
+    ) -> Vec<GroupedSearchResult> {
         let mut groups: Vec<GroupedSearchResult> = Vec::new();
         let mut seen_artifacts: HashSet<String> = HashSet::new();
 
@@ -599,7 +665,8 @@ mod tests {
             Ok(Arc::new(MockEmbedder::new(384)) as Arc<dyn crate::vector::Embedder>)
         }));
 
-        let engine = HybridSearchEngine::new(db.clone(), fts, vector_index.clone(), scheduler.clone());
+        let engine =
+            HybridSearchEngine::new(db.clone(), fts, vector_index.clone(), scheduler.clone());
 
         // Setup test data
         let path1 = "/Users/test/Documents/invoice.pdf";
@@ -630,7 +697,9 @@ mod tests {
 
         // Insert vector for c1
         let model = scheduler.get_model().await.unwrap();
-        let vec1 = model.embed_text("Total invoice amount for consulting services").unwrap();
+        let vec1 = model
+            .embed_text("Total invoice amount for consulting services")
+            .unwrap();
         vector_index.insert_vector("c1", &vec1).unwrap();
 
         let settings = AppSettings::default();
@@ -649,9 +718,18 @@ mod tests {
         assert!(res.is_pinned);
 
         // Check match reasons
-        let has_keyword = res.reasons.iter().any(|r| matches!(r, MatchReason::ExactKeyword { .. }));
-        let has_vector = res.reasons.iter().any(|r| matches!(r, MatchReason::SemanticSimilarity { .. }));
-        let has_path = res.reasons.iter().any(|r| matches!(r, MatchReason::PathMatch { .. }));
+        let has_keyword = res
+            .reasons
+            .iter()
+            .any(|r| matches!(r, MatchReason::ExactKeyword { .. }));
+        let has_vector = res
+            .reasons
+            .iter()
+            .any(|r| matches!(r, MatchReason::SemanticSimilarity { .. }));
+        let has_path = res
+            .reasons
+            .iter()
+            .any(|r| matches!(r, MatchReason::PathMatch { .. }));
         assert!(has_keyword);
         assert!(has_vector);
         assert!(has_path);

@@ -163,8 +163,15 @@ impl CrawlCoordinator {
 
         let now = chrono::Utc::now().timestamp();
         for f in folders {
-            let already_pending = inner.pending_queue.iter().any(|q| q.id == f.id || paths_match(&q.path, &f.path));
-            let is_active = inner.active_folder.as_ref().map(|a| a.id == f.id || paths_match(&a.path, &f.path)).unwrap_or(false);
+            let already_pending = inner
+                .pending_queue
+                .iter()
+                .any(|q| q.id == f.id || paths_match(&q.path, &f.path));
+            let is_active = inner
+                .active_folder
+                .as_ref()
+                .map(|a| a.id == f.id || paths_match(&a.path, &f.path))
+                .unwrap_or(false);
             if !already_pending && !is_active {
                 inner.pending_queue.push_back(QueuedFolderItem {
                     id: f.id.clone(),
@@ -200,7 +207,11 @@ impl CrawlCoordinator {
         }
         inner.folder_start_time = Some(Instant::now());
 
-        let mut item = if let Some(idx) = inner.pending_queue.iter().position(|q| paths_match(&q.path, folder_path)) {
+        let mut item = if let Some(idx) = inner
+            .pending_queue
+            .iter()
+            .position(|q| paths_match(&q.path, folder_path))
+        {
             tracing::info!("CrawlCoordinator::start_folder_analysis: found '{}' in pending_queue (idx {}), promoting to active", folder_path, idx);
             inner.pending_queue.remove(idx).unwrap()
         } else if let Some(active) = inner.active_folder.take() {
@@ -261,12 +272,19 @@ impl CrawlCoordinator {
         item.folder_started_at = Some(now_ts);
         inner.active_folder = Some(item);
 
-        tracing::info!("CrawlCoordinator::start_folder_analysis: active_folder set to Analyzing for '{}'", folder_path);
+        tracing::info!(
+            "CrawlCoordinator::start_folder_analysis: active_folder set to Analyzing for '{}'",
+            folder_path
+        );
         drop(inner);
         self.emit_snapshot_throttled(true);
     }
 
-    pub fn complete_folder_analysis(&self, folder_path: &str, report: crate::models::FolderAnalysisReport) {
+    pub fn complete_folder_analysis(
+        &self,
+        folder_path: &str,
+        report: crate::models::FolderAnalysisReport,
+    ) {
         let mut inner = match self.inner.write() {
             Ok(guard) => guard,
             Err(_) => return,
@@ -279,7 +297,9 @@ impl CrawlCoordinator {
                 tracing::info!(
                     "CrawlCoordinator::complete_folder_analysis: matched active_folder for '{}' \
                      — transitioning Analyzing → Ready ({} indexable files, ~{}s ETA)",
-                    folder_path, report.total_indexable_files, report.estimated_time_seconds
+                    folder_path,
+                    report.total_indexable_files,
+                    report.estimated_time_seconds
                 );
                 active.status = QueueFolderStatus::Ready;
                 active.total_files_expected = report.total_indexable_files;
@@ -290,7 +310,8 @@ impl CrawlCoordinator {
                 tracing::warn!(
                     "CrawlCoordinator::complete_folder_analysis: active_folder path '{}' \
                      does NOT match target '{}' — will check pending_queue",
-                    active.path, folder_path
+                    active.path,
+                    folder_path
                 );
             }
         } else {
@@ -329,7 +350,10 @@ impl CrawlCoordinator {
         self.emit_snapshot_throttled(true);
     }
 
-    pub fn get_analysis_report(&self, folder_path: &str) -> Option<crate::models::FolderAnalysisReport> {
+    pub fn get_analysis_report(
+        &self,
+        folder_path: &str,
+    ) -> Option<crate::models::FolderAnalysisReport> {
         let inner = self.inner.read().ok()?;
         if let Some(ref active) = inner.active_folder {
             if paths_match(&active.path, folder_path) {
@@ -381,7 +405,11 @@ impl CrawlCoordinator {
                 active
             } else {
                 inner.pending_queue.push_back(active);
-                if let Some(idx) = inner.pending_queue.iter().position(|q| paths_match(&q.path, folder_path)) {
+                if let Some(idx) = inner
+                    .pending_queue
+                    .iter()
+                    .position(|q| paths_match(&q.path, folder_path))
+                {
                     inner.pending_queue.remove(idx).unwrap()
                 } else {
                     QueuedFolderItem {
@@ -402,7 +430,11 @@ impl CrawlCoordinator {
                     }
                 }
             }
-        } else if let Some(idx) = inner.pending_queue.iter().position(|q| paths_match(&q.path, folder_path)) {
+        } else if let Some(idx) = inner
+            .pending_queue
+            .iter()
+            .position(|q| paths_match(&q.path, folder_path))
+        {
             inner.pending_queue.remove(idx).unwrap()
         } else {
             QueuedFolderItem {
@@ -429,7 +461,10 @@ impl CrawlCoordinator {
             item.total_files_expected = total_files_expected;
         }
         if item.eta_seconds.is_none() && item.analysis_report.is_some() {
-            item.eta_seconds = item.analysis_report.as_ref().map(|r| r.estimated_time_seconds);
+            item.eta_seconds = item
+                .analysis_report
+                .as_ref()
+                .map(|r| r.estimated_time_seconds);
         }
         item.is_paused = is_already_paused;
         item.folder_started_at = Some(now_ts);
@@ -481,11 +516,15 @@ impl CrawlCoordinator {
 
             // Compute live ETA from folder_start_time throughput
             if let Some(folder_elapsed) = folder_elapsed_opt {
-                let files_processed = active.files_indexed + active.files_skipped + active.files_failed;
+                let files_processed =
+                    active.files_indexed + active.files_skipped + active.files_failed;
                 if folder_elapsed > 0.5 && files_processed > 0 {
                     let fps = files_processed as f64 / folder_elapsed;
                     active.throughput_fps = fps;
-                    let total = active.total_files_expected.max(active.total_files_discovered).max(files_processed);
+                    let total = active
+                        .total_files_expected
+                        .max(active.total_files_discovered)
+                        .max(files_processed);
                     let remaining = total.saturating_sub(files_processed);
                     if remaining > 0 && fps > 0.0 {
                         active.eta_seconds = Some((remaining as f64 / fps).ceil() as u64);
@@ -533,7 +572,11 @@ impl CrawlCoordinator {
             };
         }
         // Also remove any matching item in pending_queue if still present
-        if let Some(idx) = inner.pending_queue.iter().position(|q| paths_match(&q.path, folder_path)) {
+        if let Some(idx) = inner
+            .pending_queue
+            .iter()
+            .position(|q| paths_match(&q.path, folder_path))
+        {
             inner.pending_queue.remove(idx);
         }
 
@@ -572,7 +615,11 @@ impl CrawlCoordinator {
         inner.cancelled_folders.insert(folder_id.to_string());
 
         // Remove from pending queue if present
-        if let Some(idx) = inner.pending_queue.iter().position(|q| q.id == folder_id || paths_match(&q.path, folder_id)) {
+        if let Some(idx) = inner
+            .pending_queue
+            .iter()
+            .position(|q| q.id == folder_id || paths_match(&q.path, folder_id))
+        {
             let q = inner.pending_queue.remove(idx).unwrap();
             inner.cancelled_folders.insert(q.path);
         }
@@ -621,7 +668,10 @@ impl CrawlCoordinator {
     }
 
     pub fn has_pending_folders(&self) -> bool {
-        self.inner.read().map(|i| !i.pending_queue.is_empty()).unwrap_or(false)
+        self.inner
+            .read()
+            .map(|i| !i.pending_queue.is_empty())
+            .unwrap_or(false)
     }
 
     pub fn is_folder_paused(&self, folder_path: &str) -> bool {
@@ -759,12 +809,27 @@ impl CrawlCoordinator {
             .map(|s| s.elapsed().as_millis() as u64)
             .unwrap_or(0);
 
-        let total_queue_depth = inner.pending_queue.len() + if inner.active_folder.is_some() { 1 } else { 0 };
+        let total_queue_depth =
+            inner.pending_queue.len() + if inner.active_folder.is_some() { 1 } else { 0 };
 
-        let is_scanning = inner.active_folder.as_ref().map(|a| a.status == QueueFolderStatus::Scanning).unwrap_or(false);
-        let is_analyzing = inner.active_folder.as_ref().map(|a| a.status == QueueFolderStatus::Analyzing).unwrap_or(false)
-            || inner.pending_queue.iter().any(|q| q.status == QueueFolderStatus::Analyzing);
-        let has_queued = inner.pending_queue.iter().any(|q| q.status == QueueFolderStatus::Queued);
+        let is_scanning = inner
+            .active_folder
+            .as_ref()
+            .map(|a| a.status == QueueFolderStatus::Scanning)
+            .unwrap_or(false);
+        let is_analyzing = inner
+            .active_folder
+            .as_ref()
+            .map(|a| a.status == QueueFolderStatus::Analyzing)
+            .unwrap_or(false)
+            || inner
+                .pending_queue
+                .iter()
+                .any(|q| q.status == QueueFolderStatus::Analyzing);
+        let has_queued = inner
+            .pending_queue
+            .iter()
+            .any(|q| q.status == QueueFolderStatus::Queued);
 
         IndexingQueueSnapshot {
             is_active: is_scanning || is_analyzing || has_queued,

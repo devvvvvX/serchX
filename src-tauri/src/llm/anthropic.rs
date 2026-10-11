@@ -86,7 +86,9 @@ impl LlmProvider for AnthropicCompatClient {
         token_sender: Sender<String>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         if !Self::is_localhost(&self.endpoint) {
-            return Err("External cloud endpoints strictly prohibited for privacy (zero egress)".into());
+            return Err(
+                "External cloud endpoints strictly prohibited for privacy (zero egress)".into(),
+            );
         }
 
         let client = reqwest::Client::builder()
@@ -106,11 +108,13 @@ impl LlmProvider for AnthropicCompatClient {
         });
 
         tracing::info!("anthropic generate_stream: sending request to {}", gen_url);
-        let response = client.post(&gen_url)
+        let response = client
+            .post(&gen_url)
             .header("x-api-key", "dummy_local_key") // Dummy key for compatible servers
             .header("anthropic-version", "2023-06-01")
             .json(&body)
-            .send().await;
+            .send()
+            .await;
 
         match response {
             Ok(resp) if resp.status().is_success() => {
@@ -144,9 +148,10 @@ impl LlmProvider for AnthropicCompatClient {
                         if let Ok(json) = serde_json::from_str::<Value>(raw_line) {
                             let type_str = json.get("type").and_then(|t| t.as_str()).unwrap_or("");
                             if type_str == "content_block_delta" {
-                                if let Some(token) = json.get("delta")
+                                if let Some(token) = json
+                                    .get("delta")
                                     .and_then(|d| d.get("text"))
-                                    .and_then(|t| t.as_str()) 
+                                    .and_then(|t| t.as_str())
                                 {
                                     if !token.is_empty() {
                                         if token_sender.send(token.to_string()).await.is_err() {

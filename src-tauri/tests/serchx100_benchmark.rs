@@ -1,5 +1,4 @@
 use chrono::{Datelike, Duration, TimeZone, Utc, Weekday};
-use serde::Deserialize;
 use serchx_lib::benchmark::reporter::generate_markdown_report;
 use serchx_lib::benchmark::telemetry::{get_peak_rss_bytes, get_sqlite_disk_bytes};
 use serchx_lib::benchmark::{BenchmarkResult, CategoryMetrics, QueryEvaluation};
@@ -11,6 +10,7 @@ use serchx_lib::search::hybrid::HybridSearchEngine;
 use serchx_lib::vector::embedder::{Embedder, MockEmbedder};
 use serchx_lib::vector::index::{SqliteVectorIndex, VectorIndex};
 use serchx_lib::vector::scheduler::ModelScheduler;
+use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
 use std::sync::Arc;
@@ -69,7 +69,8 @@ async fn test_serchx100_benchmark_evaluation_and_report() {
     // Helper to calculate exact days back for target weekdays
     let days_back_for_weekday = |target: Weekday| -> i64 {
         let current = now.weekday();
-        let mut diff = (current.num_days_from_monday() as i64) - (target.num_days_from_monday() as i64);
+        let mut diff =
+            (current.num_days_from_monday() as i64) - (target.num_days_from_monday() as i64);
         if diff <= 0 {
             diff += 7;
         }
@@ -568,7 +569,11 @@ async fn test_serchx100_benchmark_evaluation_and_report() {
     let queries: Vec<BenchmarkQueryItem> =
         serde_json::from_str(&fixture_content).expect("parse serchx100_queries.json");
 
-    assert_eq!(queries.len(), 100, "Benchmark must contain exactly 100 queries");
+    assert_eq!(
+        queries.len(),
+        100,
+        "Benchmark must contain exactly 100 queries"
+    );
 
     let settings = AppSettings::default();
 
@@ -585,12 +590,17 @@ async fn test_serchx100_benchmark_evaluation_and_report() {
         // Find rank of expected result
         let mut rank_found = None;
 
-        let (exp_art_id, exp_versions) = artifact_map
-            .get(&q.expected_artifact)
-            .unwrap_or_else(|| panic!("Expected artifact '{}' not found in corpus", q.expected_artifact));
+        let (exp_art_id, exp_versions) =
+            artifact_map.get(&q.expected_artifact).unwrap_or_else(|| {
+                panic!(
+                    "Expected artifact '{}' not found in corpus",
+                    q.expected_artifact
+                )
+            });
 
         for (idx, r) in results.iter().enumerate() {
-            let is_artifact_match = r.artifact_id == *exp_art_id || r.path.ends_with(&q.expected_artifact);
+            let is_artifact_match =
+                r.artifact_id == *exp_art_id || r.path.ends_with(&q.expected_artifact);
 
             let is_match = if let Some(v_idx) = q.expected_version_index {
                 // If version index specified, check if version matches
@@ -644,10 +654,8 @@ async fn test_serchx100_benchmark_evaluation_and_report() {
     let mut category_metrics = Vec::new();
 
     for cat in &category_names {
-        let cat_evals: Vec<&QueryEvaluation> = evaluations
-            .iter()
-            .filter(|e| e.category == *cat)
-            .collect();
+        let cat_evals: Vec<&QueryEvaluation> =
+            evaluations.iter().filter(|e| e.category == *cat).collect();
 
         let count = cat_evals.len();
         if count == 0 {
@@ -674,27 +682,40 @@ async fn test_serchx100_benchmark_evaluation_and_report() {
         let (gate_status, gate_threshold_desc) = match *cat {
             "ExactMetadataPath" => {
                 let passed = recall_at_3 >= 0.95;
-                (if passed { "PASSED" } else { "FAILED" }.to_string(), "Recall@3 ≥ 95%".to_string())
+                (
+                    if passed { "PASSED" } else { "FAILED" }.to_string(),
+                    "Recall@3 ≥ 95%".to_string(),
+                )
             }
             "TemporalRecency" => {
                 let passed = recall_at_3 >= 0.85 && mrr >= 0.80;
-                (if passed { "PASSED" } else { "FAILED" }.to_string(), "Recall@3 ≥ 85%, MRR ≥ 0.80".to_string())
+                (
+                    if passed { "PASSED" } else { "FAILED" }.to_string(),
+                    "Recall@3 ≥ 85%, MRR ≥ 0.80".to_string(),
+                )
             }
             "VersionRecall" => {
                 let passed = recall_at_3 >= 0.85 && mrr >= 0.80;
-                (if passed { "PASSED" } else { "FAILED" }.to_string(), "Recall@3 ≥ 85%, MRR ≥ 0.80".to_string())
+                (
+                    if passed { "PASSED" } else { "FAILED" }.to_string(),
+                    "Recall@3 ≥ 85%, MRR ≥ 0.80".to_string(),
+                )
             }
             "SemanticHybrid" => {
                 let passed = recall_at_3 >= 0.80;
-                (if passed { "PASSED" } else { "FAILED" }.to_string(), "Recall@3 ≥ 80%".to_string())
+                (
+                    if passed { "PASSED" } else { "FAILED" }.to_string(),
+                    "Recall@3 ≥ 80%".to_string(),
+                )
             }
             "OcrScreenshot" => {
                 let passed = recall_at_3 >= 0.80;
-                (if passed { "PASSED" } else { "FAILED" }.to_string(), "Recall@3 ≥ 80%".to_string())
+                (
+                    if passed { "PASSED" } else { "FAILED" }.to_string(),
+                    "Recall@3 ≥ 80%".to_string(),
+                )
             }
-            "PersonSource" => {
-                ("ADVISORY".to_string(), "Advisory evaluation".to_string())
-            }
+            "PersonSource" => ("ADVISORY".to_string(), "Advisory evaluation".to_string()),
             _ => ("PASSED".to_string(), "N/A".to_string()),
         };
 

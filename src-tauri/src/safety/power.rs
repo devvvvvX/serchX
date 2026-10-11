@@ -17,9 +17,9 @@ pub struct PowerStatus {
 
 #[cfg(target_os = "macos")]
 pub fn get_thermal_state() -> ThermalState {
-    use objc::{msg_send, sel, sel_impl};
     #[allow(deprecated)]
     use cocoa::base::id;
+    use objc::{msg_send, sel, sel_impl};
     unsafe {
         let process_info_class = objc::class!(NSProcessInfo);
         let process_info: id = msg_send![process_info_class, processInfo];
@@ -40,7 +40,10 @@ pub fn get_thermal_state() -> ThermalState {
 
 pub fn check_power_conditions() -> PowerStatus {
     let thermal_state = get_thermal_state();
-    let should_throttle = matches!(thermal_state, ThermalState::Serious | ThermalState::Critical);
+    let should_throttle = matches!(
+        thermal_state,
+        ThermalState::Serious | ThermalState::Critical
+    );
     PowerStatus {
         thermal_state,
         on_battery: false,
@@ -57,14 +60,19 @@ pub mod tests {
         let state = get_thermal_state();
         assert!(matches!(
             state,
-            ThermalState::Nominal | ThermalState::Fair | ThermalState::Serious | ThermalState::Critical
+            ThermalState::Nominal
+                | ThermalState::Fair
+                | ThermalState::Serious
+                | ThermalState::Critical
         ));
     }
 
     #[test]
     fn test_power_status_query() {
         let status = check_power_conditions();
-        if status.thermal_state == ThermalState::Serious || status.thermal_state == ThermalState::Critical {
+        if status.thermal_state == ThermalState::Serious
+            || status.thermal_state == ThermalState::Critical
+        {
             assert!(status.should_throttle);
         } else {
             assert!(!status.should_throttle);

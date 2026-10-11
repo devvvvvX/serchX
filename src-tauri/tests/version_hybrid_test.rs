@@ -89,8 +89,6 @@ async fn test_directional_version_retrieval_and_injection() {
     ];
     db.insert_chunks(&chunks).unwrap();
 
-
-
     let settings = AppSettings::default();
 
     // Test 1: Query for "before pricing changed" -> Should elevate V2 above V3
@@ -101,16 +99,22 @@ async fn test_directional_version_retrieval_and_injection() {
 
     assert!(!results_before.is_empty(), "Should return matching results");
     let top_result = &results_before[0];
-    assert_eq!(top_result.version_id, "v-02", "V2 must rank first for 'before pricing changed'");
+    assert_eq!(
+        top_result.version_id, "v-02",
+        "V2 must rank first for 'before pricing changed'"
+    );
 
     // Check evidence
     let has_version_rel = top_result.reasons.iter().any(|r| match r {
-        serchx_lib::search::hybrid::MatchReason::VersionRelationship { relation_summary, .. } => {
-            relation_summary.contains("pricing")
-        }
+        serchx_lib::search::hybrid::MatchReason::VersionRelationship {
+            relation_summary, ..
+        } => relation_summary.contains("pricing"),
         _ => false,
     });
-    assert!(has_version_rel, "Top result must contain VersionRelationship match reason");
+    assert!(
+        has_version_rel,
+        "Top result must contain VersionRelationship match reason"
+    );
 
     // Test 2: Query for "after pricing changed" -> Should elevate V3 above V2
     let results_after = engine
@@ -119,7 +123,10 @@ async fn test_directional_version_retrieval_and_injection() {
         .unwrap();
 
     assert!(!results_after.is_empty());
-    assert_eq!(results_after[0].version_id, "v-03", "V3 must rank first for 'after pricing changed'");
+    assert_eq!(
+        results_after[0].version_id, "v-03",
+        "V3 must rank first for 'after pricing changed'"
+    );
 
     // Test 3: Normal query without version cue preserves standard execution
     let results_normal = engine

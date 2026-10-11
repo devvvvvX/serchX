@@ -77,7 +77,8 @@ impl IngestionPipeline {
                 .spawn(move || {
                     while let Ok(chunks) = rx.recv() {
                         for chunk_batch in chunks.chunks(32) {
-                            let texts: Vec<String> = chunk_batch.iter().map(|c| c.content.clone()).collect();
+                            let texts: Vec<String> =
+                                chunk_batch.iter().map(|c| c.content.clone()).collect();
                             if let Ok(embeddings) = emb_bg.embed_batch(&texts) {
                                 let batch_items: Vec<(&str, &[f32])> = chunk_batch
                                     .iter()
@@ -107,7 +108,11 @@ impl IngestionPipeline {
 
     pub fn enqueue_for_background_embedding(&self, chunks: &[DocumentChunk]) {
         if let Some(ref bg_tx) = self.bg_embedding_tx {
-            let vector_chunks: Vec<_> = chunks.iter().take(MAX_VECTOR_CHUNKS_PER_DOC).cloned().collect();
+            let vector_chunks: Vec<_> = chunks
+                .iter()
+                .take(MAX_VECTOR_CHUNKS_PER_DOC)
+                .cloned()
+                .collect();
             let _ = bg_tx.try_send(vector_chunks);
         }
     }
@@ -166,7 +171,11 @@ impl IngestionPipeline {
         let size_bytes = metadata.len() as i64;
         let modified_at = metadata
             .modified()
-            .map(|t| t.duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis() as i64)
+            .map(|t| {
+                t.duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_millis() as i64
+            })
             .unwrap_or_else(|_| chrono::Utc::now().timestamp_millis());
 
         // Fast-path: Check if latest version already has identical (size_bytes, modified_at)
@@ -304,7 +313,11 @@ impl IngestionPipeline {
         let size_bytes = metadata.len() as i64;
         let modified_at = metadata
             .modified()
-            .map(|t| t.duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis() as i64)
+            .map(|t| {
+                t.duration_since(std::time::UNIX_EPOCH)
+                    .unwrap_or_default()
+                    .as_millis() as i64
+            })
             .unwrap_or_else(|_| chrono::Utc::now().timestamp_millis());
 
         // Fast-path: Check if latest version already has identical (size_bytes, modified_at)
@@ -457,12 +470,20 @@ mod tests {
         let dmg_path = temp_dir.path().join("installer.dmg");
         std::fs::write(&dmg_path, b"dummy dmg").unwrap();
         let err = pipeline.ingest_file(&dmg_path).unwrap_err();
-        assert!(matches!(err, IngestionError::Filtered(crate::safety::FilterRejectionReason::BlacklistedExtension(_))));
+        assert!(matches!(
+            err,
+            IngestionError::Filtered(crate::safety::FilterRejectionReason::BlacklistedExtension(
+                _
+            ))
+        ));
 
         // 2. Disallowed extension
         let unknown_path = temp_dir.path().join("test.foobar");
         std::fs::write(&unknown_path, b"unknown format").unwrap();
         let err = pipeline.ingest_file(&unknown_path).unwrap_err();
-        assert!(matches!(err, IngestionError::Filtered(crate::safety::FilterRejectionReason::DisallowedExtension(_))));
+        assert!(matches!(
+            err,
+            IngestionError::Filtered(crate::safety::FilterRejectionReason::DisallowedExtension(_))
+        ));
     }
 }

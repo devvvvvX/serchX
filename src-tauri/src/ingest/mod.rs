@@ -4,8 +4,8 @@ pub mod pipeline;
 pub mod watcher;
 
 pub use pipeline::IngestionPipeline;
-pub use watcher::{FileSystemWatcher, FileWatcher, WatchEvent, WatchEventKind};
 use thiserror::Error;
+pub use watcher::{FileSystemWatcher, FileWatcher, WatchEvent, WatchEventKind};
 
 #[derive(Error, Debug)]
 pub enum IngestionError {

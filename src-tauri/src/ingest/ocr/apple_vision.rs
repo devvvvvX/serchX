@@ -190,9 +190,15 @@ do {
                 Ok(Some(status)) => break status,
                 Ok(None) => {
                     if start.elapsed() >= timeout {
-                        tracing::warn!("Vision OCR timed out for {:?}, killing child process {}", image_path, pid);
+                        tracing::warn!(
+                            "Vision OCR timed out for {:?}, killing child process {}",
+                            image_path,
+                            pid
+                        );
                         let _ = child.kill();
-                        unsafe { libc::kill(pid as i32, libc::SIGKILL); }
+                        unsafe {
+                            libc::kill(pid as i32, libc::SIGKILL);
+                        }
                         let _ = child.wait();
                         return Err(IngestionError::Ocr(format!(
                             "Vision OCR timed out after {} seconds",
@@ -203,9 +209,14 @@ do {
                 }
                 Err(e) => {
                     let _ = child.kill();
-                    unsafe { libc::kill(pid as i32, libc::SIGKILL); }
+                    unsafe {
+                        libc::kill(pid as i32, libc::SIGKILL);
+                    }
                     let _ = child.wait();
-                    return Err(IngestionError::Ocr(format!("Vision OCR execution failed: {}", e)));
+                    return Err(IngestionError::Ocr(format!(
+                        "Vision OCR execution failed: {}",
+                        e
+                    )));
                 }
             }
         };

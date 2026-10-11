@@ -86,7 +86,10 @@ fn test_crawl_coordinator_state_and_ring_buffer() {
     // Oldest 10 (0..9) were pushed out; element 0 should be doc_10.txt
     assert_eq!(snap3.recent_events[0].path, "/path/to/folder1/doc_10.txt");
     assert_eq!(snap3.recent_events[49].path, "/path/to/folder1/doc_59.txt");
-    assert_eq!(snap3.current_file, Some("/path/to/folder1/doc_59.txt".to_string()));
+    assert_eq!(
+        snap3.current_file,
+        Some("/path/to/folder1/doc_59.txt".to_string())
+    );
 
     // 5. Complete folder 1 crawl
     coordinator.complete_folder_crawl("/path/to/folder1", true);
@@ -128,13 +131,8 @@ fn test_crawler_engine_updates_coordinator_during_crawl() {
 
     let controller = CrawlController::new();
     let coordinator = Arc::new(CrawlCoordinator::new(None));
-    let engine = CrawlerEngine::with_coordinator(
-        pipeline,
-        controller,
-        filter,
-        None,
-        coordinator.clone(),
-    );
+    let engine =
+        CrawlerEngine::with_coordinator(pipeline, controller, filter, None, coordinator.clone());
 
     // Enqueue before crawling
     let watched = WatchedFolder {
@@ -174,12 +172,19 @@ fn test_coordinator_pre_count_and_file_processing_lifecycle() {
     // Start file processing notifies current_file immediately before ingestion
     coordinator.start_file_processing("/path/to/folder/big.json", 1_500_000);
     let snap2 = coordinator.get_snapshot();
-    assert_eq!(snap2.current_file, Some("/path/to/folder/big.json".to_string()));
+    assert_eq!(
+        snap2.current_file,
+        Some("/path/to/folder/big.json".to_string())
+    );
     assert_eq!(snap2.current_file_size, 1_500_000);
 
     // Completion records file progress
     coordinator.increment_discovered();
-    coordinator.record_file_progress("/path/to/folder/big.json", FileProcessStatus::Indexed, 1_500_000);
+    coordinator.record_file_progress(
+        "/path/to/folder/big.json",
+        FileProcessStatus::Indexed,
+        1_500_000,
+    );
     let snap3 = coordinator.get_snapshot();
     let active3 = snap3.active_folder.unwrap();
     assert_eq!(active3.files_indexed, 1);
@@ -383,7 +388,13 @@ fn test_two_phase_analysis_then_indexing_lifecycle() {
     assert_eq!(active2.total_files_expected, 9500);
     assert_eq!(active2.eta_seconds, Some(140));
     assert!(active2.analysis_report.is_some());
-    assert_eq!(coordinator.get_analysis_report(&folder.path).unwrap().total_indexable_files, 9500);
+    assert_eq!(
+        coordinator
+            .get_analysis_report(&folder.path)
+            .unwrap()
+            .total_indexable_files,
+        9500
+    );
 
     // Phase 2: Indexing starts seamlessly
     coordinator.start_folder_crawl_with_expected(&folder.path, 9500);
@@ -393,5 +404,3 @@ fn test_two_phase_analysis_then_indexing_lifecycle() {
     assert_eq!(active3.total_files_expected, 9500);
     assert!(active3.analysis_report.is_some());
 }
-
-

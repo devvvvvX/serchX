@@ -37,8 +37,8 @@ impl FastEmbedder {
         };
 
         let options = InitOptions::new(model_type);
-        let model = TextEmbedding::try_new(options)
-            .map_err(|e| EmbedError::ModelLoad(e.to_string()))?;
+        let model =
+            TextEmbedding::try_new(options).map_err(|e| EmbedError::ModelLoad(e.to_string()))?;
 
         Ok(Self {
             model,
@@ -91,7 +91,6 @@ impl Embedder for FastEmbedder {
 
         Ok(results)
     }
-
 
     fn dimension(&self) -> usize {
         self.dimension

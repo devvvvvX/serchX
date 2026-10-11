@@ -86,8 +86,14 @@ fn validate_version_id(id: &str) -> Result<(), String> {
     if id.is_empty() || id.len() > 64 {
         return Err("Invalid version ID length (must be 1-64 characters)".to_string());
     }
-    if !id.chars().all(|c| c.is_alphanumeric() || c == '-' || c == '_') {
-        return Err("Invalid version ID characters (alphanumeric, hyphens, and underscores only)".to_string());
+    if !id
+        .chars()
+        .all(|c| c.is_alphanumeric() || c == '-' || c == '_')
+    {
+        return Err(
+            "Invalid version ID characters (alphanumeric, hyphens, and underscores only)"
+                .to_string(),
+        );
     }
     Ok(())
 }
@@ -125,7 +131,11 @@ pub async fn get_version_diff(
             // Use "\n" (not "\n\n") to match extracted_text format and avoid
             // false diffs at paragraph boundaries when one version has
             // extracted_text and the other falls back to chunk reconstruction
-            chunks.into_iter().map(|c| c.content).collect::<Vec<_>>().join("\n")
+            chunks
+                .into_iter()
+                .map(|c| c.content)
+                .collect::<Vec<_>>()
+                .join("\n")
         }
     };
 
@@ -134,7 +144,11 @@ pub async fn get_version_diff(
         None => {
             let mut chunks = db.get_chunks_for_version(&version_b_id).unwrap_or_default();
             chunks.sort_by_key(|c| c.chunk_index);
-            chunks.into_iter().map(|c| c.content).collect::<Vec<_>>().join("\n")
+            chunks
+                .into_iter()
+                .map(|c| c.content)
+                .collect::<Vec<_>>()
+                .join("\n")
         }
     };
 
@@ -156,8 +170,7 @@ pub async fn toggle_version_pin(
         .ok_or_else(|| format!("Version '{}' not found", version_id))?;
 
     let new_pinned = !ver.is_pinned;
-    crate::db::pin_version(db.inner(), &version_id, new_pinned)
-        .map_err(|e| e.to_string())?;
+    crate::db::pin_version(db.inner(), &version_id, new_pinned).map_err(|e| e.to_string())?;
 
     Ok(new_pinned)
 }

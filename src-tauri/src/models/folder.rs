@@ -35,4 +35,3 @@ pub struct FolderAnalysisReport {
     pub estimated_time_seconds: u64,
     pub scan_duration_ms: u64,
 }
-

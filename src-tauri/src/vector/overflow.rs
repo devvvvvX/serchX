@@ -9,7 +9,12 @@ impl CorpusCapManager {
     /// Evaluates whether a chunk should receive a vector embedding.
     /// Pinned items are always protected and embedded regardless of cap.
     /// Unpinned chunks are rejected once total_vectors reaches or exceeds max_vectors.
-    pub fn can_embed_chunk(&self, is_pinned: bool, total_vectors: usize, max_vectors: usize) -> bool {
+    pub fn can_embed_chunk(
+        &self,
+        is_pinned: bool,
+        total_vectors: usize,
+        max_vectors: usize,
+    ) -> bool {
         if is_pinned {
             return true;
         }

@@ -35,16 +35,42 @@ fn setup_benchmark_corpus(
     let num_artifacts = total_chunks / 10;
 
     let topics = [
-        ("invoice consulting services quarterly payment", "pdf", "/Users/alice/Documents"),
-        ("quarterly financial tax statement budget sheet", "xlsx", "/Users/alice/Documents"),
-        ("docker container crash exception error logs", "txt", "/Users/alice/Downloads"),
-        ("user interface design mockups spotlight search", "png", "/Users/alice/Desktop"),
-        ("system architecture security encryption policy", "docx", "/Users/alice/Documents"),
+        (
+            "invoice consulting services quarterly payment",
+            "pdf",
+            "/Users/alice/Documents",
+        ),
+        (
+            "quarterly financial tax statement budget sheet",
+            "xlsx",
+            "/Users/alice/Documents",
+        ),
+        (
+            "docker container crash exception error logs",
+            "txt",
+            "/Users/alice/Downloads",
+        ),
+        (
+            "user interface design mockups spotlight search",
+            "png",
+            "/Users/alice/Desktop",
+        ),
+        (
+            "system architecture security encryption policy",
+            "docx",
+            "/Users/alice/Documents",
+        ),
     ];
 
     for a_idx in 0..num_artifacts {
         let (topic, ext, folder) = topics[a_idx % topics.len()];
-        let path = format!("{}/doc_{}_{}.{}", folder, a_idx, topic.split_whitespace().next().unwrap(), ext);
+        let path = format!(
+            "{}/doc_{}_{}.{}",
+            folder,
+            a_idx,
+            topic.split_whitespace().next().unwrap(),
+            ext
+        );
         let artifact = db.upsert_artifact(&path, "file").unwrap();
 
         let v_id = format!("v-{}", a_idx);
@@ -58,7 +84,10 @@ fn setup_benchmark_corpus(
             size_bytes: 2048,
             modified_at: mod_time,
             previous_version_id: None,
-            extracted_text: Some(format!("{} full text extracted for document {}", topic, a_idx)),
+            extracted_text: Some(format!(
+                "{} full text extracted for document {}",
+                topic, a_idx
+            )),
             is_pinned: a_idx % 20 == 0, // Every 20th artifact is pinned
         };
         db.record_version(&version).unwrap();
@@ -68,7 +97,10 @@ fn setup_benchmark_corpus(
             let chunk_id = format!("c-{}-{}", a_idx, c_idx);
             let content = format!(
                 "Document {} chunk {}: {} with specific details and numbers #{}",
-                a_idx, c_idx, topic, a_idx * 10 + c_idx
+                a_idx,
+                c_idx,
+                topic,
+                a_idx * 10 + c_idx
             );
             chunks.push(DocumentChunk {
                 id: chunk_id,
@@ -176,8 +208,14 @@ async fn test_corpus_overflow_and_fts_graceful_degradation() {
     assert!(!results.is_empty());
     // All results should have ExactKeyword match reasons, and no SemanticSimilarity
     for r in &results {
-        assert!(r.reasons.iter().any(|m| matches!(m, MatchReason::ExactKeyword { .. })));
-        assert!(!r.reasons.iter().any(|m| matches!(m, MatchReason::SemanticSimilarity { .. })));
+        assert!(r
+            .reasons
+            .iter()
+            .any(|m| matches!(m, MatchReason::ExactKeyword { .. })));
+        assert!(!r
+            .reasons
+            .iter()
+            .any(|m| matches!(m, MatchReason::SemanticSimilarity { .. })));
     }
 }
 

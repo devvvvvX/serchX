@@ -45,10 +45,7 @@ impl ExtractorRegistry {
     }
 
     pub fn extract(&self, path: &Path) -> Result<String, IngestionError> {
-        let extension = path
-            .extension()
-            .and_then(|ext| ext.to_str())
-            .unwrap_or("");
+        let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
 
         for extractor in &self.extractors {
             if extractor.can_handle(extension) {

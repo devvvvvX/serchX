@@ -100,18 +100,35 @@ async fn test_match_reason_version_relationship() {
             matched_diff_snippet,
             later_version_date,
             ..
-        } => Some((*version_number, *total_versions, relation_summary.clone(), matched_diff_snippet.clone(), *later_version_date)),
+        } => Some((
+            *version_number,
+            *total_versions,
+            relation_summary.clone(),
+            matched_diff_snippet.clone(),
+            *later_version_date,
+        )),
         _ => None,
     });
 
-    assert!(rel_reason.is_some(), "Result must have VersionRelationship reason");
+    assert!(
+        rel_reason.is_some(),
+        "Result must have VersionRelationship reason"
+    );
     let (v_num, total_v, summary, snippet, later_date) = rel_reason.unwrap();
     assert_eq!(v_num, 1);
     assert_eq!(total_v, 2);
-    assert!(summary.contains("pricing"), "Summary should mention pricing: {}", summary);
+    assert!(
+        summary.contains("pricing"),
+        "Summary should mention pricing: {}",
+        summary
+    );
     assert!(snippet.is_some(), "Snippet should be present");
     let snip_str = snippet.unwrap();
-    assert!(snip_str.contains("- "), "Snippet should format deleted line with - prefix: {}", snip_str);
+    assert!(
+        snip_str.contains("- "),
+        "Snippet should format deleted line with - prefix: {}",
+        snip_str
+    );
     assert!(later_date.is_some(), "Later version date must be present");
 }
 
@@ -159,7 +176,9 @@ async fn test_grouped_search_results() {
         size_bytes: 120,
         modified_at: (now - Duration::days(10)).timestamp_millis(),
         previous_version_id: Some("spec-v1".to_string()),
-        extracted_text: Some("System architecture updated blueprint specifications with auth.".to_string()),
+        extracted_text: Some(
+            "System architecture updated blueprint specifications with auth.".to_string(),
+        ),
         is_pinned: true,
     };
     let v3 = ArtifactVersion {
@@ -171,7 +190,9 @@ async fn test_grouped_search_results() {
         size_bytes: 150,
         modified_at: (now - Duration::days(1)).timestamp_millis(),
         previous_version_id: Some("spec-v2".to_string()),
-        extracted_text: Some("System architecture final blueprint specifications with cloud auth.".to_string()),
+        extracted_text: Some(
+            "System architecture final blueprint specifications with cloud auth.".to_string(),
+        ),
         is_pinned: false,
     };
 
@@ -196,7 +217,8 @@ async fn test_grouped_search_results() {
             id: "chk-s3".to_string(),
             version_id: "spec-v3".to_string(),
             chunk_index: 0,
-            content: "System architecture final blueprint specifications with cloud auth.".to_string(),
+            content: "System architecture final blueprint specifications with cloud auth."
+                .to_string(),
         },
     ];
     db.insert_chunks(&chunks).unwrap();
@@ -207,14 +229,28 @@ async fn test_grouped_search_results() {
         .await
         .expect("search grouped");
 
-    assert_eq!(grouped.len(), 1, "Results should collapse into single grouped artifact card");
+    assert_eq!(
+        grouped.len(),
+        1,
+        "Results should collapse into single grouped artifact card"
+    );
     let group = &grouped[0];
     assert_eq!(group.total_version_count, 3, "Total versions should be 3");
-    assert_eq!(group.other_versions.len(), 2, "Other versions should contain remaining 2 versions");
-    assert!(group.other_versions.iter().all(|ov| ov.version_id != group.primary_result.version_id));
+    assert_eq!(
+        group.other_versions.len(),
+        2,
+        "Other versions should contain remaining 2 versions"
+    );
+    assert!(group
+        .other_versions
+        .iter()
+        .all(|ov| ov.version_id != group.primary_result.version_id));
 
     // Verify pinned status is reflected in other_versions
-    let v2_summary = group.other_versions.iter().find(|ov| ov.version_id == "spec-v2");
+    let v2_summary = group
+        .other_versions
+        .iter()
+        .find(|ov| ov.version_id == "spec-v2");
     if let Some(s) = v2_summary {
         assert!(s.is_pinned, "spec-v2 is_pinned flag must be true");
     }

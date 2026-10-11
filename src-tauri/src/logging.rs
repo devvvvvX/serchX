@@ -96,7 +96,10 @@ pub fn rotate_log_files(log_path: &Path, max_archives: usize) -> std::io::Result
     }
 
     let parent = log_path.parent().unwrap_or_else(|| Path::new("."));
-    let stem = log_path.file_name().and_then(|n| n.to_str()).unwrap_or("serchx.log");
+    let stem = log_path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("serchx.log");
 
     for i in (1..=max_archives).rev() {
         let old_archive = parent.join(format!("{}.{}", stem, i));
@@ -141,16 +144,13 @@ pub fn init_logging(
     let env_filter = EnvFilter::try_from_default_env()
         .unwrap_or_else(|_| EnvFilter::new("serchx=debug,info,warn,error"));
 
-    let stdout_layer = tracing_subscriber::fmt::layer()
-        .with_ansi(true);
+    let stdout_layer = tracing_subscriber::fmt::layer().with_ansi(true);
 
     let file_layer = tracing_subscriber::fmt::layer()
         .with_writer(non_blocking_appender)
         .with_ansi(false);
 
-    let ring_buffer_writer = RingBufferWriter {
-        buffer: log_buffer,
-    };
+    let ring_buffer_writer = RingBufferWriter { buffer: log_buffer };
     let ring_layer = tracing_subscriber::fmt::layer()
         .with_writer(ring_buffer_writer)
         .with_ansi(false);
@@ -163,7 +163,10 @@ pub fn init_logging(
 
     let _ = subscriber.try_init();
 
-    tracing::info!("Tracing logger initialized. Log file: {}", log_file_path.display());
+    tracing::info!(
+        "Tracing logger initialized. Log file: {}",
+        log_file_path.display()
+    );
 
     Some(guard)
 }

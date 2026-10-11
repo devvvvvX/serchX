@@ -35,7 +35,8 @@ pub fn get_current_rss_bytes() -> u64 {
         unsafe {
             let mut info = std::mem::zeroed::<libc::mach_task_basic_info>();
             let mut count = (std::mem::size_of::<libc::mach_task_basic_info>()
-                / std::mem::size_of::<libc::natural_t>()) as libc::mach_msg_type_number_t;
+                / std::mem::size_of::<libc::natural_t>())
+                as libc::mach_msg_type_number_t;
             let kerr = libc::task_info(
                 libc::mach_task_self(),
                 libc::MACH_TASK_BASIC_INFO,

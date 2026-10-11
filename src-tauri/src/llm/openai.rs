@@ -88,14 +88,19 @@ impl LlmProvider for OpenAiCompatClient {
         token_sender: Sender<String>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         if !Self::is_localhost(&self.endpoint) {
-            return Err("External cloud endpoints strictly prohibited for privacy (zero egress)".into());
+            return Err(
+                "External cloud endpoints strictly prohibited for privacy (zero egress)".into(),
+            );
         }
 
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(300))
             .build()?;
 
-        let gen_url = format!("{}/v1/chat/completions", self.endpoint.trim_end_matches('/'));
+        let gen_url = format!(
+            "{}/v1/chat/completions",
+            self.endpoint.trim_end_matches('/')
+        );
         let body = serde_json::json!({
             "model": self.model_name,
             "messages": [
@@ -148,19 +153,25 @@ impl LlmProvider for OpenAiCompatClient {
                         }
 
                         if let Ok(json) = serde_json::from_str::<Value>(raw_line) {
-                            if let Some(delta) = json.get("choices")
+                            if let Some(delta) = json
+                                .get("choices")
                                 .and_then(|c| c.as_array())
                                 .and_then(|arr| arr.get(0))
                                 .and_then(|c| c.get("delta"))
                             {
-                                let reasoning_opt = delta.get("reasoning_content").and_then(|t| t.as_str());
+                                let reasoning_opt =
+                                    delta.get("reasoning_content").and_then(|t| t.as_str());
                                 let content_opt = delta.get("content").and_then(|t| t.as_str());
 
                                 if let Some(reasoning) = reasoning_opt {
                                     if !reasoning.is_empty() {
                                         if !in_reasoning {
                                             in_reasoning = true;
-                                            if token_sender.send("<think>\n".to_string()).await.is_err() {
+                                            if token_sender
+                                                .send("<think>\n".to_string())
+                                                .await
+                                                .is_err()
+                                            {
                                                 return Ok(());
                                             }
                                         }
@@ -172,7 +183,11 @@ impl LlmProvider for OpenAiCompatClient {
                                     if !content.is_empty() {
                                         if in_reasoning {
                                             in_reasoning = false;
-                                            if token_sender.send("\n</think>\n".to_string()).await.is_err() {
+                                            if token_sender
+                                                .send("\n</think>\n".to_string())
+                                                .await
+                                                .is_err()
+                                            {
                                                 return Ok(());
                                             }
                                         }

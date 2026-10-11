@@ -30,7 +30,10 @@ fn test_clamp_window_width_bounds() {
 fn test_open_file_nonexistent_path_fails() {
     let non_existent = "/non/existent/path/to/serchx_test_file_never_exists.xyz";
     let res = open_file(non_existent.to_string());
-    assert!(res.is_err(), "open_file on nonexistent path must return Err");
+    assert!(
+        res.is_err(),
+        "open_file on nonexistent path must return Err"
+    );
     let err_msg = res.unwrap_err();
     assert!(err_msg.contains("File does not exist"));
 }
@@ -74,7 +77,8 @@ fn test_auto_hide_flag() {
 #[test]
 fn test_tauri_conf_spotlight_window_properties() {
     let conf_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tauri.conf.json");
-    let conf_str = fs::read_to_string(&conf_path).expect("tauri.conf.json must exist and be readable");
+    let conf_str =
+        fs::read_to_string(&conf_path).expect("tauri.conf.json must exist and be readable");
     let conf_json: serde_json::Value =
         serde_json::from_str(&conf_str).expect("tauri.conf.json must be valid JSON");
 
@@ -94,7 +98,9 @@ fn test_tauri_conf_spotlight_window_properties() {
 
 #[test]
 fn test_window_position_packing_and_recording() {
-    use serchx_lib::commands::ui::{pack_pos, unpack_pos, record_window_position, get_recorded_window_position};
+    use serchx_lib::commands::ui::{
+        get_recorded_window_position, pack_pos, record_window_position, unpack_pos,
+    };
 
     // Test positive coordinates
     let packed = pack_pos(450, 200);
@@ -123,7 +129,8 @@ fn test_activation_policy_types() {
 #[test]
 fn test_tauri_conf_settings_window_properties() {
     let conf_path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tauri.conf.json");
-    let conf_str = fs::read_to_string(&conf_path).expect("tauri.conf.json must exist and be readable");
+    let conf_str =
+        fs::read_to_string(&conf_path).expect("tauri.conf.json must exist and be readable");
     let conf_json: serde_json::Value =
         serde_json::from_str(&conf_str).expect("tauri.conf.json must be valid JSON");
 
@@ -161,7 +168,11 @@ fn test_blur_debounce_logic() {
     assert!(is_blur_debounced(recent, 350));
 
     // Instant older than 350ms should not debounce
-    let past = Some(Instant::now().checked_sub(Duration::from_millis(400)).unwrap());
+    let past = Some(
+        Instant::now()
+            .checked_sub(Duration::from_millis(400))
+            .unwrap(),
+    );
     assert!(!is_blur_debounced(past, 350));
 }
 
@@ -210,5 +221,3 @@ fn test_blacklist_folder_ipc_flow() {
     let list_after = db.get_blacklist_folders().unwrap();
     assert!(list_after.is_empty());
 }
-
-

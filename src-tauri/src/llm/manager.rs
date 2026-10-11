@@ -1,9 +1,9 @@
+use super::anthropic::AnthropicCompatClient;
 use super::catalog::ModelCatalog;
+use super::lm_studio::LmStudioClient;
 use super::native::NativeMetalRunner;
 use super::ollama::OllamaClient;
-use super::lm_studio::LmStudioClient;
 use super::openai::OpenAiCompatClient;
-use super::anthropic::AnthropicCompatClient;
 use super::provider::LlmProvider;
 use crate::models::AppSettings;
 use crate::safety::power::check_power_conditions;
@@ -71,21 +71,41 @@ impl LlmManager {
     pub async fn get_status(&self, settings: &AppSettings) -> LlmStatus {
         let is_synth = self.is_synthesizing.load(Ordering::Relaxed);
         let provider_guard = self.active_provider.read().await;
-        let is_loaded = provider_guard.as_ref().map(|p| p.is_loaded()).unwrap_or(false);
+        let is_loaded = provider_guard
+            .as_ref()
+            .map(|p| p.is_loaded())
+            .unwrap_or(false);
         let ram_usage_bytes = provider_guard.as_ref().and_then(|p| p.memory_usage_bytes());
-        let mut model_size_bytes = provider_guard.as_ref().and_then(|p| p.model_footprint_bytes());
+        let mut model_size_bytes = provider_guard
+            .as_ref()
+            .and_then(|p| p.model_footprint_bytes());
         let (provider, model_name, endpoint) = if let Some(ref p) = *provider_guard {
-            (p.provider_type().to_string(), p.model_name().to_string(), p.endpoint().map(|s| s.to_string()))
+            (
+                p.provider_type().to_string(),
+                p.model_name().to_string(),
+                p.endpoint().map(|s| s.to_string()),
+            )
         } else {
             let prov = settings.llm_provider.clone();
             if prov == "lm_studio" {
-                let model = LmStudioClient::resolve_active_model(&settings.custom_llm_endpoint, &settings.active_llm_model).await;
-                ("lm_studio".to_string(), model, Some(settings.custom_llm_endpoint.clone()))
+                let model = LmStudioClient::resolve_active_model(
+                    &settings.custom_llm_endpoint,
+                    &settings.active_llm_model,
+                )
+                .await;
+                (
+                    "lm_studio".to_string(),
+                    model,
+                    Some(settings.custom_llm_endpoint.clone()),
+                )
             } else if prov == "native" || prov == "hybrid" || prov == "local" {
-                let discovered = ModelCatalog::discover_models(&self.models_dir, &settings.active_llm_model);
+                let discovered =
+                    ModelCatalog::discover_models(&self.models_dir, &settings.active_llm_model);
                 let model_path = discovered
                     .iter()
-                    .find(|m| m.id == settings.active_llm_model || m.filename == settings.active_llm_model)
+                    .find(|m| {
+                        m.id == settings.active_llm_model || m.filename == settings.active_llm_model
+                    })
                     .map(|m| {
                         let p = std::path::Path::new(&m.filename);
                         if p.is_absolute() {
@@ -101,24 +121,38 @@ impl LlmManager {
                         } else if settings.active_llm_model.ends_with(".gguf") {
                             self.models_dir.join(&settings.active_llm_model)
                         } else {
-                            self.models_dir.join(format!("{}.gguf", settings.active_llm_model))
+                            self.models_dir
+                                .join(format!("{}.gguf", settings.active_llm_model))
                         }
                     });
                 if let Ok(m) = std::fs::metadata(&model_path) {
-                    let ctx_len = if settings.context_length > 0 { settings.context_length } else { 2048 };
+                    let ctx_len = if settings.context_length > 0 {
+                        settings.context_length
+                    } else {
+                        2048
+                    };
                     model_size_bytes = Some(m.len() + (ctx_len as u64) * 128 * 1024);
                 }
                 (prov, settings.active_llm_model.clone(), None)
             } else {
-                (prov, settings.active_llm_model.clone(), Some(settings.custom_llm_endpoint.clone()))
+                (
+                    prov,
+                    settings.active_llm_model.clone(),
+                    Some(settings.custom_llm_endpoint.clone()),
+                )
             }
         };
 
-        if model_size_bytes.is_none() && (provider == "native" || provider == "hybrid" || provider == "local") {
-            let discovered = ModelCatalog::discover_models(&self.models_dir, &settings.active_llm_model);
+        if model_size_bytes.is_none()
+            && (provider == "native" || provider == "hybrid" || provider == "local")
+        {
+            let discovered =
+                ModelCatalog::discover_models(&self.models_dir, &settings.active_llm_model);
             let model_path = discovered
                 .iter()
-                .find(|m| m.id == settings.active_llm_model || m.filename == settings.active_llm_model)
+                .find(|m| {
+                    m.id == settings.active_llm_model || m.filename == settings.active_llm_model
+                })
                 .map(|m| {
                     let p = std::path::Path::new(&m.filename);
                     if p.is_absolute() {
@@ -134,11 +168,16 @@ impl LlmManager {
                     } else if settings.active_llm_model.ends_with(".gguf") {
                         self.models_dir.join(&settings.active_llm_model)
                     } else {
-                        self.models_dir.join(format!("{}.gguf", settings.active_llm_model))
+                        self.models_dir
+                            .join(format!("{}.gguf", settings.active_llm_model))
                     }
                 });
             if let Ok(m) = std::fs::metadata(&model_path) {
-                let ctx_len = if settings.context_length > 0 { settings.context_length } else { 2048 };
+                let ctx_len = if settings.context_length > 0 {
+                    settings.context_length
+                } else {
+                    2048
+                };
                 model_size_bytes = Some(m.len() + (ctx_len as u64) * 128 * 1024);
             }
         }
@@ -176,7 +215,11 @@ impl LlmManager {
         self.cancel_idle_unload().await;
         let mut provider_guard = self.active_provider.write().await;
         if let Some(old) = provider_guard.take() {
-            tracing::info!("reset_active_provider: unloading cached provider '{}' with model '{}'", old.provider_type(), old.model_name());
+            tracing::info!(
+                "reset_active_provider: unloading cached provider '{}' with model '{}'",
+                old.provider_type(),
+                old.model_name()
+            );
             let _ = old.unload().await;
         }
     }
@@ -228,7 +271,10 @@ impl LlmManager {
             let ttl = self.idle_ttl;
             let task = tokio::spawn(async move {
                 tokio::time::sleep(ttl).await;
-                tracing::info!("idle unload timer expired ({}s): unloading model", ttl.as_secs());
+                tracing::info!(
+                    "idle unload timer expired ({}s): unloading model",
+                    ttl.as_secs()
+                );
                 let _ = provider_for_unload.unload().await;
                 if let Some(ref app) = app_handle_for_unload {
                     let _ = app.emit("llm-status-changed", ());
@@ -252,7 +298,9 @@ impl LlmManager {
             let model_matches = current.model_name() == settings.active_llm_model
                 || (current.provider_type() == "lm_studio" && !current.model_name().is_empty());
             let endpoint_matches = match current.endpoint() {
-                Some(ep) => ep.trim_end_matches('/') == settings.custom_llm_endpoint.trim_end_matches('/'),
+                Some(ep) => {
+                    ep.trim_end_matches('/') == settings.custom_llm_endpoint.trim_end_matches('/')
+                }
                 None => true,
             };
 
@@ -295,7 +343,8 @@ impl LlmManager {
                 let resolved_model = LmStudioClient::resolve_active_model(
                     &settings.custom_llm_endpoint,
                     &settings.active_llm_model,
-                ).await;
+                )
+                .await;
                 tracing::info!(
                     "resolve_provider: Connected to LM Studio at {}. Using model: '{}'",
                     settings.custom_llm_endpoint,
@@ -373,7 +422,8 @@ impl LlmManager {
         }
 
         // Native Metal runner fallback
-        let discovered = ModelCatalog::discover_models(&self.models_dir, &settings.active_llm_model);
+        let discovered =
+            ModelCatalog::discover_models(&self.models_dir, &settings.active_llm_model);
         let model_path = discovered
             .iter()
             .find(|m| m.id == settings.active_llm_model || m.filename == settings.active_llm_model)
@@ -392,7 +442,8 @@ impl LlmManager {
                 } else if settings.active_llm_model.ends_with(".gguf") {
                     self.models_dir.join(&settings.active_llm_model)
                 } else {
-                    self.models_dir.join(format!("{}.gguf", settings.active_llm_model))
+                    self.models_dir
+                        .join(format!("{}.gguf", settings.active_llm_model))
                 }
             });
 
@@ -452,7 +503,10 @@ impl LlmManager {
             } else if prov_type == "ollama" {
                 return Err("OLLAMA_UNREACHABLE: Ollama is not reachable at the configured endpoint. Please start Ollama or download an on-device model from the Neural Engine tab.".to_string());
             } else {
-                return Err(format!("NO_MODEL_AVAILABLE: Failed to load LLM provider ({}): {}", prov_type, e));
+                return Err(format!(
+                    "NO_MODEL_AVAILABLE: Failed to load LLM provider ({}): {}",
+                    prov_type, e
+                ));
             }
         }
 
@@ -541,9 +595,13 @@ impl LlmManager {
         };
 
         if had_error && full_response.is_empty() {
-            self.schedule_idle_unload(provider.clone(), app_handle.clone()).await;
+            self.schedule_idle_unload(provider.clone(), app_handle.clone())
+                .await;
             if let Some(ref app) = app_handle {
-                let _ = app.emit("llm-error", "Model inference failed or timed out".to_string());
+                let _ = app.emit(
+                    "llm-error",
+                    "Model inference failed or timed out".to_string(),
+                );
             }
             return Err("Model inference failed or timed out".to_string());
         }
@@ -571,7 +629,8 @@ impl LlmManager {
         }
 
         // Memory lifecycle handling (D-02, D-16)
-        self.schedule_idle_unload(provider.clone(), app_handle.clone()).await;
+        self.schedule_idle_unload(provider.clone(), app_handle.clone())
+            .await;
 
         Ok(full_response)
     }

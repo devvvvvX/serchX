@@ -37,43 +37,45 @@ pub struct ParsedQuery {
 }
 
 static QUOTE_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#""([^"]+)""#).unwrap());
-static FOLDER_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)\b(?:in|from)\s+(desktop|documents|downloads)\b").unwrap()
-});
+static FOLDER_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i)\b(?:in|from)\s+(desktop|documents|downloads)\b").unwrap());
 static TODAY_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?i)\btoday\b").unwrap());
 static YESTERDAY_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"(?i)\b(?:from\s+)?yesterday\b").unwrap());
-static LAST_WEEK_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"(?i)\blast week\b").unwrap());
+static LAST_WEEK_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?i)\blast week\b").unwrap());
 static LAST_MONTH_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"(?i)\blast month\b").unwrap());
 static WEEKDAY_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)\blast\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b").unwrap()
+    Regex::new(r"(?i)\blast\s+(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b")
+        .unwrap()
 });
 static YEAR_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\b(202[0-9])\b").unwrap());
 static VERSION_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)\b(draft|v1|v2|v3|v4|v5|final|latest|previous|before|after|newer|older)\b").unwrap()
+    Regex::new(r"(?i)\b(draft|v1|v2|v3|v4|v5|final|latest|previous|before|after|newer|older)\b")
+        .unwrap()
 });
 static BEFORE_CHANGE_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)\b(?:before|prior to)\s+([^,.]+?\b(?:changed|updated|removed|modified|was signed))\b").unwrap()
+    Regex::new(
+        r"(?i)\b(?:before|prior to)\s+([^,.]+?\b(?:changed|updated|removed|modified|was signed))\b",
+    )
+    .unwrap()
 });
 static AFTER_CHANGE_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)\b(?:after|following)\s+([^,.]+?\b(?:changed|updated|added|modified|meeting))\b").unwrap()
+    Regex::new(
+        r"(?i)\b(?:after|following)\s+([^,.]+?\b(?:changed|updated|added|modified|meeting))\b",
+    )
+    .unwrap()
 });
-static V_NUM_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)\b(?:v([1-9])|version\s*([1-9]))\b").unwrap()
-});
-static RELATIVE_VERSION_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)\b(draft|final|latest|previous|earlier)\b").unwrap()
-});
-static NOISE_RE: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r"(?i)\b(the|a|an|from|in|on|with|about|of|for)\b").unwrap()
-});
+static V_NUM_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i)\b(?:v([1-9])|version\s*([1-9]))\b").unwrap());
+static RELATIVE_VERSION_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i)\b(draft|final|latest|previous|earlier)\b").unwrap());
+static NOISE_RE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"(?i)\b(the|a|an|from|in|on|with|about|of|for)\b").unwrap());
 
 static TYPE_SPREADSHEET_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"(?i)\b(spreadsheet|spreadsheets|excel|csv|tsv)\b").unwrap());
-static TYPE_PDF_RE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"(?i)\b(pdf|pdfs)\b").unwrap());
+static TYPE_PDF_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?i)\b(pdf|pdfs)\b").unwrap());
 static TYPE_DOC_RE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"(?i)\b(document|documents|word|doc|docx)\b").unwrap());
 static TYPE_PRESENTATION_RE: LazyLock<Regex> = LazyLock::new(|| {
@@ -87,11 +89,7 @@ static TYPE_CODE_RE: LazyLock<Regex> =
 
 pub fn parse_query(raw: &str, now: DateTime<Utc>) -> ParsedQuery {
     // T-03-05: Cap query length at 1000 characters to prevent ReDoS
-    let raw = if raw.len() > 1000 {
-        &raw[..1000]
-    } else {
-        raw
-    };
+    let raw = if raw.len() > 1000 { &raw[..1000] } else { raw };
 
     let mut working_text = raw.to_string();
     let mut exact_phrases = Vec::new();
@@ -208,19 +206,28 @@ pub fn parse_query(raw: &str, now: DateTime<Utc>) -> ParsedQuery {
     // 4. Extract file type cues
     if TYPE_SPREADSHEET_RE.is_match(&working_text) {
         type_extensions.extend(["csv".to_string(), "tsv".to_string(), "xlsx".to_string()]);
-        working_text = TYPE_SPREADSHEET_RE.replace_all(&working_text, " ").to_string();
+        working_text = TYPE_SPREADSHEET_RE
+            .replace_all(&working_text, " ")
+            .to_string();
     }
     if TYPE_PDF_RE.is_match(&working_text) {
         type_extensions.push("pdf".to_string());
         working_text = TYPE_PDF_RE.replace_all(&working_text, " ").to_string();
     }
     if TYPE_DOC_RE.is_match(&working_text) {
-        type_extensions.extend(["docx".to_string(), "txt".to_string(), "md".to_string(), "rtf".to_string()]);
+        type_extensions.extend([
+            "docx".to_string(),
+            "txt".to_string(),
+            "md".to_string(),
+            "rtf".to_string(),
+        ]);
         working_text = TYPE_DOC_RE.replace_all(&working_text, " ").to_string();
     }
     if TYPE_PRESENTATION_RE.is_match(&working_text) {
         type_extensions.extend(["pptx".to_string(), "key".to_string()]);
-        working_text = TYPE_PRESENTATION_RE.replace_all(&working_text, " ").to_string();
+        working_text = TYPE_PRESENTATION_RE
+            .replace_all(&working_text, " ")
+            .to_string();
     }
     if TYPE_IMAGE_RE.is_match(&working_text) {
         type_extensions.extend([
@@ -253,7 +260,11 @@ pub fn parse_query(raw: &str, now: DateTime<Utc>) -> ParsedQuery {
         version_cues.push("before".to_string());
         directional_version_cue = Some(DirectionalVersionCue {
             direction: Some(ChangeDirection::Before),
-            target_subject: if cleaned_subject.is_empty() { None } else { Some(cleaned_subject) },
+            target_subject: if cleaned_subject.is_empty() {
+                None
+            } else {
+                Some(cleaned_subject)
+            },
             ordinal: None,
             raw_cue: full_match,
         });
@@ -265,7 +276,11 @@ pub fn parse_query(raw: &str, now: DateTime<Utc>) -> ParsedQuery {
         version_cues.push("after".to_string());
         directional_version_cue = Some(DirectionalVersionCue {
             direction: Some(ChangeDirection::After),
-            target_subject: if cleaned_subject.is_empty() { None } else { Some(cleaned_subject) },
+            target_subject: if cleaned_subject.is_empty() {
+                None
+            } else {
+                Some(cleaned_subject)
+            },
             ordinal: None,
             raw_cue: full_match,
         });
@@ -274,7 +289,10 @@ pub fn parse_query(raw: &str, now: DateTime<Utc>) -> ParsedQuery {
 
     // Extract explicit version number (e.g. "v2", "version 3")
     if let Some(caps) = V_NUM_RE.captures(&working_text) {
-        let ord_opt = caps.get(1).or_else(|| caps.get(2)).and_then(|m| m.as_str().parse::<i32>().ok());
+        let ord_opt = caps
+            .get(1)
+            .or_else(|| caps.get(2))
+            .and_then(|m| m.as_str().parse::<i32>().ok());
         let raw_cue = caps.get(0).unwrap().as_str().to_string();
         version_cues.push(raw_cue.to_lowercase());
         if let Some(ref mut d_cue) = directional_version_cue {
@@ -304,7 +322,9 @@ pub fn parse_query(raw: &str, now: DateTime<Utc>) -> ParsedQuery {
                 raw_cue: raw_cue.clone(),
             });
         }
-        working_text = RELATIVE_VERSION_RE.replace_all(&working_text, " ").to_string();
+        working_text = RELATIVE_VERSION_RE
+            .replace_all(&working_text, " ")
+            .to_string();
     }
 
     // 5b. Extract general version cues
@@ -348,7 +368,8 @@ pub fn parse_query(raw: &str, now: DateTime<Utc>) -> ParsedQuery {
 
 fn clean_change_subject(raw: &str) -> String {
     static ACTION_RE: LazyLock<Regex> = LazyLock::new(|| {
-        Regex::new(r"(?i)\b(changed|updated|removed|modified|was signed|added|meeting|the|a|an)\b").unwrap()
+        Regex::new(r"(?i)\b(changed|updated|removed|modified|was signed|added|meeting|the|a|an)\b")
+            .unwrap()
     });
     let cleaned = ACTION_RE.replace_all(raw, " ").to_string();
     cleaned.split_whitespace().collect::<Vec<_>>().join(" ")
@@ -453,8 +474,15 @@ mod tests {
         let total_queries = iterations * queries.len();
         let avg_micros = elapsed.as_micros() as f64 / total_queries as f64;
 
-        println!("Parsed {} queries in {:?}, avg: {:.2} µs/query", total_queries, elapsed, avg_micros);
+        println!(
+            "Parsed {} queries in {:?}, avg: {:.2} µs/query",
+            total_queries, elapsed, avg_micros
+        );
         // Assert average latency is < 500 µs (< 0.5 ms), well within 5 ms requirement (RET-01)
-        assert!(avg_micros < 5000.0, "Parsing must be under 5ms on average, was {:.2} µs", avg_micros);
+        assert!(
+            avg_micros < 5000.0,
+            "Parsing must be under 5ms on average, was {:.2} µs",
+            avg_micros
+        );
     }
 }

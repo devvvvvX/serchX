@@ -28,7 +28,8 @@ pub struct HardwareProfile {
 
 impl HardwareProfile {
     pub fn new(chip_name: String, total_memory_bytes: u64) -> Self {
-        let total_memory_gb = ((total_memory_bytes as f64) / (1024.0 * 1024.0 * 1024.0)).round() as u32;
+        let total_memory_gb =
+            ((total_memory_bytes as f64) / (1024.0 * 1024.0 * 1024.0)).round() as u32;
         let is_apple_silicon = chip_name.to_lowercase().contains("apple")
             || cfg!(target_arch = "aarch64")
             || chip_name.starts_with('M');
@@ -117,10 +118,25 @@ mod tests {
         assert!(!profile.chip_name.is_empty());
 
         // Test tier mapping
-        assert_eq!(HardwareProfile::recommended_tier_for_memory(8), ModelTier::Lightweight);
-        assert_eq!(HardwareProfile::recommended_tier_for_memory(16), ModelTier::Standard);
-        assert_eq!(HardwareProfile::recommended_tier_for_memory(24), ModelTier::Power);
-        assert_eq!(HardwareProfile::recommended_tier_for_memory(32), ModelTier::Power);
-        assert_eq!(HardwareProfile::recommended_tier_for_memory(64), ModelTier::Power);
+        assert_eq!(
+            HardwareProfile::recommended_tier_for_memory(8),
+            ModelTier::Lightweight
+        );
+        assert_eq!(
+            HardwareProfile::recommended_tier_for_memory(16),
+            ModelTier::Standard
+        );
+        assert_eq!(
+            HardwareProfile::recommended_tier_for_memory(24),
+            ModelTier::Power
+        );
+        assert_eq!(
+            HardwareProfile::recommended_tier_for_memory(32),
+            ModelTier::Power
+        );
+        assert_eq!(
+            HardwareProfile::recommended_tier_for_memory(64),
+            ModelTier::Power
+        );
     }
 }

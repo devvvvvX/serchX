@@ -63,11 +63,12 @@ pub async fn get_model_catalog(
         }
 
         // If provider is ollama or on default ollama port, also probe Ollama
-        let ollama_endpoint = if settings.llm_provider == "ollama" && !settings.custom_llm_endpoint.is_empty() {
-            settings.custom_llm_endpoint.clone()
-        } else {
-            "http://127.0.0.1:11434".to_string()
-        };
+        let ollama_endpoint =
+            if settings.llm_provider == "ollama" && !settings.custom_llm_endpoint.is_empty() {
+                settings.custom_llm_endpoint.clone()
+            } else {
+                "http://127.0.0.1:11434".to_string()
+            };
         let tags_url = format!("{}/api/tags", ollama_endpoint.trim_end_matches('/'));
         if let Ok(res) = client.get(&tags_url).send().await {
             if let Ok(json) = res.json::<serde_json::Value>().await {
@@ -111,7 +112,10 @@ pub async fn set_active_model(
     settings.active_llm_model = model_id.clone();
     db.save_app_settings(&settings).map_err(|e| e.to_string())?;
     manager.reset_active_provider().await;
-    tracing::info!("set_active_model: switched active model to '{}' and cleared provider cache", model_id);
+    tracing::info!(
+        "set_active_model: switched active model to '{}' and cleared provider cache",
+        model_id
+    );
     Ok(())
 }
 
@@ -176,11 +180,7 @@ pub async fn start_model_download(
             }
             Err(err) => {
                 // Real error (network, IO, hash mismatch, etc.)
-                tracing::error!(
-                    "Model download failed for {}: {}",
-                    model_id_for_error,
-                    err
-                );
+                tracing::error!("Model download failed for {}: {}", model_id_for_error, err);
                 let err_progress = DownloadProgress {
                     model_id: model_id_for_error,
                     bytes_downloaded: 0,
@@ -238,8 +238,10 @@ pub async fn resume_model_download(
         // Also allow resume if a .part file exists on disk (e.g. after app restart)
         let models_dir = ModelCatalog::default_models_dir();
         let settings_check = db.get_app_settings().map_err(|e| e.to_string())?;
-        let models_check = ModelCatalog::discover_models(&models_dir, &settings_check.active_llm_model);
-        let has_part = models_check.iter()
+        let models_check =
+            ModelCatalog::discover_models(&models_dir, &settings_check.active_llm_model);
+        let has_part = models_check
+            .iter()
             .find(|m| m.id == model_id)
             .map(|m| models_dir.join(format!("{}.part", m.filename)).exists())
             .unwrap_or(false);
@@ -280,11 +282,7 @@ pub async fn resume_model_download(
                 tracing::info!("Model download cancelled for {}", model_id_for_error);
             }
             Err(err) => {
-                tracing::error!(
-                    "Model download failed for {}: {}",
-                    model_id_for_error,
-                    err
-                );
+                tracing::error!("Model download failed for {}: {}", model_id_for_error, err);
                 let err_progress = DownloadProgress {
                     model_id: model_id_for_error,
                     bytes_downloaded: 0,
@@ -349,9 +347,7 @@ pub fn reveal_models_dir_in_finder() -> Result<(), String> {
     let _ = std::fs::create_dir_all(&models_dir);
     #[cfg(target_os = "macos")]
     {
-        let _ = std::process::Command::new("open")
-            .arg(&models_dir)
-            .spawn();
+        let _ = std::process::Command::new("open").arg(&models_dir).spawn();
     }
     Ok(())
 }
@@ -361,7 +357,10 @@ pub fn import_custom_model(
     source_path: String,
     db: State<'_, Arc<DatabaseManager>>,
 ) -> Result<ModelCatalogItem, String> {
-    tracing::info!("import_custom_model: invoked with source_path: '{}'", source_path);
+    tracing::info!(
+        "import_custom_model: invoked with source_path: '{}'",
+        source_path
+    );
     let raw = source_path.trim().trim_matches(|c| c == '"' || c == '\'');
     if raw.is_empty() {
         tracing::error!("import_custom_model: source_path is empty");
@@ -380,7 +379,10 @@ pub fn import_custom_model(
     };
 
     if !path.exists() {
-        tracing::error!("import_custom_model: path does not exist: {}", path.display());
+        tracing::error!(
+            "import_custom_model: path does not exist: {}",
+            path.display()
+        );
         return Err(format!("Source path does not exist: {}", path.display()));
     }
 
@@ -399,7 +401,10 @@ pub fn import_custom_model(
             if p.is_file() {
                 if let Some(ext) = p.extension().and_then(|e| e.to_str()) {
                     if ext.eq_ignore_ascii_case("gguf") {
-                        tracing::info!("import_custom_model: found candidate .gguf file: {}", p.display());
+                        tracing::info!(
+                            "import_custom_model: found candidate .gguf file: {}",
+                            p.display()
+                        );
                         candidates.push(p.to_path_buf());
                     }
                 }
@@ -417,7 +422,10 @@ pub fn import_custom_model(
         // Pick largest .gguf file (the primary weights)
         candidates.sort_by_key(|p| std::fs::metadata(p).map(|m| m.len()).unwrap_or(0));
         let selected = candidates.pop().unwrap();
-        tracing::info!("import_custom_model: selected largest candidate: {}", selected.display());
+        tracing::info!(
+            "import_custom_model: selected largest candidate: {}",
+            selected.display()
+        );
         selected
     } else if path.is_file() {
         let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
@@ -445,14 +453,22 @@ pub fn import_custom_model(
         .map_err(|e| format!("Failed to create models directory: {}", e))?;
     let dest_path = models_dir.join(&file_name);
 
-    tracing::info!("import_custom_model: linking/copying to dest_path: {}", dest_path.display());
+    tracing::info!(
+        "import_custom_model: linking/copying to dest_path: {}",
+        dest_path.display()
+    );
 
     if let Ok(_meta) = dest_path.symlink_metadata() {
-        if std::fs::read_link(&dest_path).map(|p| p == target_file).unwrap_or(false) {
+        if std::fs::read_link(&dest_path)
+            .map(|p| p == target_file)
+            .unwrap_or(false)
+        {
             tracing::info!("import_custom_model: symlink already correctly points to target");
             // Already correctly linked to target
         } else {
-            tracing::info!("import_custom_model: existing file/symlink found but incorrect, replacing it");
+            tracing::info!(
+                "import_custom_model: existing file/symlink found but incorrect, replacing it"
+            );
             let _ = std::fs::remove_file(&dest_path);
             #[cfg(unix)]
             let sym_res = std::os::unix::fs::symlink(&target_file, &dest_path);
@@ -485,12 +501,15 @@ pub fn import_custom_model(
     tracing::info!("import_custom_model: model linked/copied. Fetching catalog...");
     let settings = db.get_app_settings().map_err(|e| e.to_string())?;
     let models = ModelCatalog::discover_models(&models_dir, &settings.active_llm_model);
-    
+
     let result = models
         .into_iter()
         .find(|m| m.filename == file_name)
         .ok_or_else(|| {
-            tracing::error!("import_custom_model: failed to find imported model in catalog. filename was: {}", file_name);
+            tracing::error!(
+                "import_custom_model: failed to find imported model in catalog. filename was: {}",
+                file_name
+            );
             "Failed to discover imported model".to_string()
         });
 
@@ -612,7 +631,13 @@ pub async fn synthesize_search_results(
     let (system_prompt, user_prompt) = builder.build_prompt(&query, &evidence);
 
     manager
-        .synthesize(user_prompt, system_prompt, settings, Some(on_token), Some(app_handle))
+        .synthesize(
+            user_prompt,
+            system_prompt,
+            settings,
+            Some(on_token),
+            Some(app_handle),
+        )
         .await?;
 
     Ok(())
@@ -661,7 +686,13 @@ pub async fn summarize_document(
         builder.build_single_document_prompt(file_name, &latest_version.path, &text_content);
 
     manager
-        .synthesize(user_prompt, system_prompt, settings, Some(on_token), Some(app_handle))
+        .synthesize(
+            user_prompt,
+            system_prompt,
+            settings,
+            Some(on_token),
+            Some(app_handle),
+        )
         .await?;
 
     Ok(())
@@ -716,5 +747,3 @@ pub async fn probe_local_endpoints() -> Result<Vec<DiscoveredEndpoint>, String> 
 
     Ok(results)
 }
-
-

@@ -76,7 +76,10 @@ pub fn format_prompt(prompt: &str, system_prompt: &str, model_name: &str) -> Str
     let lower_name = model_name.to_lowercase();
     if lower_name.contains("qwen") || lower_name.contains("occ") {
         if system_prompt.trim().is_empty() {
-            format!("<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n", prompt)
+            format!(
+                "<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n",
+                prompt
+            )
         } else {
             format!(
                 "<|im_start|>system\n{}<|im_end|>\n<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n",
@@ -145,8 +148,14 @@ impl LlmProvider for NativeMetalRunner {
 
         let model = Arc::new(self.load_model()?);
         let model_size = model.size();
-        let file_bytes = std::fs::metadata(&self.model_path).map(|m| m.len()).unwrap_or(0);
-        let base_bytes = if model_size > 0 { model_size } else { file_bytes };
+        let file_bytes = std::fs::metadata(&self.model_path)
+            .map(|m| m.len())
+            .unwrap_or(0);
+        let base_bytes = if model_size > 0 {
+            model_size
+        } else {
+            file_bytes
+        };
         let kv_cache_bytes = (self.context_size as u64) * 128 * 1024;
         let memory_bytes = base_bytes + kv_cache_bytes;
 
@@ -176,13 +185,17 @@ impl LlmProvider for NativeMetalRunner {
                 return Some(session.memory_bytes);
             }
         }
-        let file_bytes = std::fs::metadata(&self.model_path).map(|m| m.len()).unwrap_or(0);
+        let file_bytes = std::fs::metadata(&self.model_path)
+            .map(|m| m.len())
+            .unwrap_or(0);
         let kv_cache_bytes = (self.context_size as u64) * 128 * 1024;
         Some(file_bytes + kv_cache_bytes)
     }
 
     fn model_footprint_bytes(&self) -> Option<u64> {
-        let file_bytes = std::fs::metadata(&self.model_path).map(|m| m.len()).unwrap_or(0);
+        let file_bytes = std::fs::metadata(&self.model_path)
+            .map(|m| m.len())
+            .unwrap_or(0);
         if file_bytes > 0 {
             let kv_cache_bytes = (self.context_size as u64) * 128 * 1024;
             Some(file_bytes + kv_cache_bytes)
@@ -200,7 +213,10 @@ impl LlmProvider for NativeMetalRunner {
         cancel_token: CancellationToken,
         token_sender: Sender<String>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        tracing::info!("native generate_stream: start with model '{}'", self.model_name);
+        tracing::info!(
+            "native generate_stream: start with model '{}'",
+            self.model_name
+        );
 
         if cancel_token.is_cancelled() {
             tracing::info!("native generate_stream: already cancelled before start");
@@ -345,4 +361,3 @@ impl LlmProvider for NativeMetalRunner {
         }
     }
 }
-

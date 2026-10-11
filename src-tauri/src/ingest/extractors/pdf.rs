@@ -19,7 +19,8 @@ pub fn extract_pdf_native_macos(path: &Path) -> Option<String> {
 
     static INIT_PDFKIT: Once = Once::new();
     INIT_PDFKIT.call_once(|| unsafe {
-        let bundle_path = NSString::alloc(nil).init_str("/System/Library/Frameworks/PDFKit.framework");
+        let bundle_path =
+            NSString::alloc(nil).init_str("/System/Library/Frameworks/PDFKit.framework");
         let bundle: id = msg_send![class!(NSBundle), bundleWithPath: bundle_path];
         if !bundle.is_null() {
             let _: bool = msg_send![bundle, load];
@@ -49,7 +50,9 @@ pub fn extract_pdf_native_macos(path: &Path) -> Option<String> {
         let text = if !doc_string.is_null() {
             let utf8_ptr: *const std::os::raw::c_char = msg_send![doc_string, UTF8String];
             if !utf8_ptr.is_null() {
-                std::ffi::CStr::from_ptr(utf8_ptr).to_string_lossy().to_string()
+                std::ffi::CStr::from_ptr(utf8_ptr)
+                    .to_string_lossy()
+                    .to_string()
             } else {
                 String::new()
             }

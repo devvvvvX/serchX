@@ -1,23 +1,23 @@
+pub mod anthropic;
 pub mod catalog;
 pub mod context_builder;
 pub mod downloader;
 pub mod hardware;
+pub mod lm_studio;
 pub mod manager;
 pub mod native;
 pub mod ollama;
-pub mod lm_studio;
 pub mod openai;
-pub mod anthropic;
 pub mod provider;
 
+pub use anthropic::AnthropicCompatClient;
 pub use catalog::{ModelCatalog, ModelCatalogItem};
 pub use context_builder::{ContextBuilder, StructuredEvidence};
 pub use downloader::{DownloadManager, DownloadProgress};
 pub use hardware::{HardwareProfile, ModelTier};
+pub use lm_studio::LmStudioClient;
 pub use manager::{LlmManager, LlmStatus};
 pub use native::NativeMetalRunner;
 pub use ollama::OllamaClient;
-pub use lm_studio::LmStudioClient;
 pub use openai::OpenAiCompatClient;
-pub use anthropic::AnthropicCompatClient;
 pub use provider::LlmProvider;

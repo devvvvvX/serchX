@@ -10,9 +10,18 @@ fn test_hardware_profiler() {
     assert!(!profile.chip_name.is_empty());
 
     // Verify mapping
-    assert_eq!(HardwareProfile::recommended_tier_for_memory(8), ModelTier::Lightweight);
-    assert_eq!(HardwareProfile::recommended_tier_for_memory(16), ModelTier::Standard);
-    assert_eq!(HardwareProfile::recommended_tier_for_memory(32), ModelTier::Power);
+    assert_eq!(
+        HardwareProfile::recommended_tier_for_memory(8),
+        ModelTier::Lightweight
+    );
+    assert_eq!(
+        HardwareProfile::recommended_tier_for_memory(16),
+        ModelTier::Standard
+    );
+    assert_eq!(
+        HardwareProfile::recommended_tier_for_memory(32),
+        ModelTier::Power
+    );
 }
 
 #[test]
@@ -27,7 +36,10 @@ fn test_model_catalog() {
     let tmp = tempdir().unwrap();
     let models = ModelCatalog::discover_models(tmp.path(), "qwen2.5-1.5b-instruct-q4_k_m");
     assert!(models.len() >= 4);
-    let active = models.iter().find(|m| m.is_active).expect("Should have active model");
+    let active = models
+        .iter()
+        .find(|m| m.is_active)
+        .expect("Should have active model");
     assert_eq!(active.id, "qwen2.5-1.5b-instruct-q4_k_m");
 }
 
@@ -58,7 +70,10 @@ fn test_discover_models_with_symlinked_gguf() {
 
         let models = ModelCatalog::discover_models(tmp_models.path(), "custom-external_model");
         let custom = models.iter().find(|m| m.id == "custom-external_model");
-        assert!(custom.is_some(), "Custom symlinked model should be discovered");
+        assert!(
+            custom.is_some(),
+            "Custom symlinked model should be discovered"
+        );
         let custom = custom.unwrap();
         assert!(custom.is_custom);
         assert!(custom.is_downloaded);

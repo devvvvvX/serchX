@@ -5,10 +5,7 @@ use std::path::Path;
 #[serde(tag = "status", content = "details")]
 pub enum PermissionStatus {
     Granted,
-    Denied {
-        reason: String,
-        fda_required: bool,
-    },
+    Denied { reason: String, fda_required: bool },
     NotFound,
 }
 

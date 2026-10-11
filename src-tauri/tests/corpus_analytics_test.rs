@@ -60,28 +60,51 @@ fn test_corpus_analytics_categorization_and_metrics() {
 
     // Verify overall totals
     assert_eq!(analytics.total_files, 6);
-    assert_eq!(analytics.total_bytes, 5000 + 3000 + 1500 + 1000 + 8000 + 2000);
+    assert_eq!(
+        analytics.total_bytes,
+        5000 + 3000 + 1500 + 1000 + 8000 + 2000
+    );
     assert_eq!(analytics.total_chunks, 2 + 1 + 1 + 1 + 0 + 1);
 
     // Verify categories
-    let doc_cat = analytics.categories.iter().find(|c| c.category == "Documents").expect("Documents category");
+    let doc_cat = analytics
+        .categories
+        .iter()
+        .find(|c| c.category == "Documents")
+        .expect("Documents category");
     assert_eq!(doc_cat.file_count, 2);
     assert_eq!(doc_cat.total_bytes, 8000);
     assert_eq!(doc_cat.extensions.len(), 2);
-    let pdf_stat = doc_cat.extensions.iter().find(|e| e.extension == "pdf").expect("pdf stat");
+    let pdf_stat = doc_cat
+        .extensions
+        .iter()
+        .find(|e| e.extension == "pdf")
+        .expect("pdf stat");
     assert_eq!(pdf_stat.file_count, 1);
     assert_eq!(pdf_stat.chunk_count, 2);
     assert_eq!(pdf_stat.total_bytes, 5000);
 
-    let code_cat = analytics.categories.iter().find(|c| c.category == "Code").expect("Code category");
+    let code_cat = analytics
+        .categories
+        .iter()
+        .find(|c| c.category == "Code")
+        .expect("Code category");
     assert_eq!(code_cat.file_count, 2);
     assert_eq!(code_cat.total_bytes, 2500);
 
-    let img_cat = analytics.categories.iter().find(|c| c.category == "Images & OCR").expect("Images category");
+    let img_cat = analytics
+        .categories
+        .iter()
+        .find(|c| c.category == "Images & OCR")
+        .expect("Images category");
     assert_eq!(img_cat.file_count, 1);
     assert_eq!(img_cat.total_bytes, 8000);
 
-    let data_cat = analytics.categories.iter().find(|c| c.category == "Data & Sheets").expect("Data category");
+    let data_cat = analytics
+        .categories
+        .iter()
+        .find(|c| c.category == "Data & Sheets")
+        .expect("Data category");
     assert_eq!(data_cat.file_count, 1);
     assert_eq!(data_cat.total_bytes, 2000);
 
@@ -98,6 +121,12 @@ fn test_system_telemetry_query() {
     let telemetry = serchx_lib::commands::ui::collect_system_telemetry(&db);
 
     assert!(telemetry.memory_rss_mb > 0.0, "RSS memory must be positive");
-    assert!(telemetry.db_size_mb >= 0.0, "Database size must be non-negative");
-    assert!(telemetry.cpu_percent >= 0.0 && telemetry.cpu_percent <= 100.0, "CPU percent must be bounded");
+    assert!(
+        telemetry.db_size_mb >= 0.0,
+        "Database size must be non-negative"
+    );
+    assert!(
+        telemetry.cpu_percent >= 0.0 && telemetry.cpu_percent <= 100.0,
+        "CPU percent must be bounded"
+    );
 }

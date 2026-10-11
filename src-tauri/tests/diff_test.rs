@@ -63,9 +63,15 @@ fn test_diff_cache_lru_eviction() {
     cache.put(diff_3_4);
     assert_eq!(cache.len(), 2);
 
-    assert!(cache.get("v1", "v2").is_some(), "v1->v2 should be preserved");
+    assert!(
+        cache.get("v1", "v2").is_some(),
+        "v1->v2 should be preserved"
+    );
     assert!(cache.get("v3", "v4").is_some(), "v3->v4 should be present");
-    assert!(cache.get("v2", "v3").is_none(), "v2->v3 should have been evicted");
+    assert!(
+        cache.get("v2", "v3").is_none(),
+        "v2->v3 should have been evicted"
+    );
 }
 
 #[test]
@@ -82,7 +88,9 @@ fn test_resolve_versions_for_path() {
     assert!(empty.is_empty());
 
     // Create artifact with 2 versions
-    let art = db.upsert_artifact(test_path, "file").expect("upsert artifact");
+    let art = db
+        .upsert_artifact(test_path, "file")
+        .expect("upsert artifact");
     let v1 = ArtifactVersion {
         id: "ver-alpha-1".to_string(),
         artifact_id: art.id.clone(),

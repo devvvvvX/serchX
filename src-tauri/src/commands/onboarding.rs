@@ -148,9 +148,8 @@ pub fn analyze_folder_path(
                 report.images_count += 1;
                 report.images_bytes += file_size;
             }
-            "rs" | "py" | "js" | "ts" | "tsx" | "jsx" | "c" | "cpp" | "cc" | "h" | "hpp"
-            | "go" | "java" | "kt" | "swift" | "rb" | "php" | "sh" | "zsh" | "bash"
-            | "css" | "scss" => {
+            "rs" | "py" | "js" | "ts" | "tsx" | "jsx" | "c" | "cpp" | "cc" | "h" | "hpp" | "go"
+            | "java" | "kt" | "swift" | "rb" | "php" | "sh" | "zsh" | "bash" | "css" | "scss" => {
                 report.code_count += 1;
                 report.code_bytes += file_size;
             }
@@ -221,12 +220,21 @@ pub fn add_watched_folder(
     let path_for_watcher = resolved_path.clone();
     let app_for_watcher = app.clone();
     std::thread::spawn(move || {
-        if let Some(watcher) = app_for_watcher.try_state::<Arc<std::sync::Mutex<crate::ingest::FileWatcher>>>() {
+        if let Some(watcher) =
+            app_for_watcher.try_state::<Arc<std::sync::Mutex<crate::ingest::FileWatcher>>>()
+        {
             if let Ok(mut w) = watcher.lock() {
                 if let Err(e) = w.watch_directory(&path_for_watcher) {
-                    tracing::error!("add_watched_folder: failed to watch directory {}: {:?}", path_for_watcher, e);
+                    tracing::error!(
+                        "add_watched_folder: failed to watch directory {}: {:?}",
+                        path_for_watcher,
+                        e
+                    );
                 } else {
-                    tracing::info!("add_watched_folder: successfully watching {}", path_for_watcher);
+                    tracing::info!(
+                        "add_watched_folder: successfully watching {}",
+                        path_for_watcher
+                    );
                 }
             }
         }
@@ -239,11 +247,18 @@ pub fn add_watched_folder(
             coordinator.start_folder_analysis(&path_clone);
             match analyze_folder_path(&path_clone, true, &db_clone) {
                 Ok(report) => {
-                    tracing::info!("add_watched_folder: analysis completed for {}, awaiting user index action", path_clone);
+                    tracing::info!(
+                        "add_watched_folder: analysis completed for {}, awaiting user index action",
+                        path_clone
+                    );
                     coordinator.complete_folder_analysis(&path_clone, report);
                 }
                 Err(e) => {
-                    tracing::warn!("add_watched_folder: analysis failed for {}: {}", path_clone, e);
+                    tracing::warn!(
+                        "add_watched_folder: analysis failed for {}: {}",
+                        path_clone,
+                        e
+                    );
                 }
             }
         }
@@ -279,7 +294,10 @@ pub fn trigger_folder_scan(
         return Err(format!("Path does not exist: {}", path));
     }
     if let Ok(folders) = db.get_watched_folders() {
-        if let Some(folder) = folders.iter().find(|f| crate::crawler::coordinator::paths_match(&f.path, &path)) {
+        if let Some(folder) = folders
+            .iter()
+            .find(|f| crate::crawler::coordinator::paths_match(&f.path, &path))
+        {
             coordinator.enqueue_folders(&[folder.clone()]);
         }
     }
@@ -301,17 +319,26 @@ pub fn toggle_watched_folder(
         .map_err(|e| e.to_string())?;
     if let Ok(folders) = db.get_watched_folders() {
         if let Some(folder) = folders.iter().find(|f| f.id == id) {
-            if let Some(watcher) = app.try_state::<Arc<std::sync::Mutex<crate::ingest::FileWatcher>>>() {
+            if let Some(watcher) =
+                app.try_state::<Arc<std::sync::Mutex<crate::ingest::FileWatcher>>>()
+            {
                 if let Ok(mut w) = watcher.lock() {
                     if enabled {
                         if let Err(e) = w.watch_directory(&folder.path) {
-                            tracing::error!("toggle_watched_folder: failed to watch directory {}: {:?}", folder.path, e);
+                            tracing::error!(
+                                "toggle_watched_folder: failed to watch directory {}: {:?}",
+                                folder.path,
+                                e
+                            );
                         }
                         // Also trigger a full crawl so the user sees the progress bar
-                        if let Some(coordinator) = app.try_state::<Arc<crate::crawler::CrawlCoordinator>>() {
+                        if let Some(coordinator) =
+                            app.try_state::<Arc<crate::crawler::CrawlCoordinator>>()
+                        {
                             coordinator.enqueue_folders(&[folder.clone()]);
                         }
-                        if let Some(crawler) = app.try_state::<Arc<crate::crawler::CrawlerEngine>>() {
+                        if let Some(crawler) = app.try_state::<Arc<crate::crawler::CrawlerEngine>>()
+                        {
                             let p = std::path::PathBuf::from(&folder.path);
                             let crawler_run = crawler.inner().clone();
                             std::thread::spawn(move || {
@@ -340,16 +367,20 @@ pub async fn purge_folder_index(
     app: tauri::AppHandle,
 ) -> Result<String, String> {
     let path_parts: Vec<&str> = path.trim_end_matches('/').rsplitn(2, '/').collect();
-    let label = format!("Delete index: {}", path_parts.first().unwrap_or(&path.as_str()));
+    let label = format!(
+        "Delete index: {}",
+        path_parts.first().unwrap_or(&path.as_str())
+    );
 
-    tracing::info!("purge_folder_index: Requested purge for path '{}' (label: '{}')", path, label);
+    tracing::info!(
+        "purge_folder_index: Requested purge for path '{}' (label: '{}')",
+        path,
+        label
+    );
 
     // Enqueue delete job immediately (total computed in background thread to avoid DB lock)
-    let (job_id, ctrl) = delete_queue.enqueue(
-        DeleteJobKind::FolderIndex { path: path.clone() },
-        label,
-        0,
-    );
+    let (job_id, ctrl) =
+        delete_queue.enqueue(DeleteJobKind::FolderIndex { path: path.clone() }, label, 0);
 
     let db = db.inner().clone();
     let dq = delete_queue.inner().clone();
@@ -359,29 +390,53 @@ pub async fn purge_folder_index(
 
     // Run deletion in background with pause/resume/stop support
     std::thread::spawn(move || {
-        tracing::info!("purge_folder_index: Worker thread started for job [{}] (path: '{}')", jid, p);
+        tracing::info!(
+            "purge_folder_index: Worker thread started for job [{}] (path: '{}')",
+            jid,
+            p
+        );
         dq.set_running(&jid);
 
         // 1. Stop active crawl and file-system monitoring for this path
-        tracing::info!("purge_folder_index: Job [{}]: Cancelling crawl and file watcher for '{}'", jid, p);
+        tracing::info!(
+            "purge_folder_index: Job [{}]: Cancelling crawl and file watcher for '{}'",
+            jid,
+            p
+        );
         if let Some(coord) = app_handle.try_state::<Arc<crate::crawler::CrawlCoordinator>>() {
             coord.cancel_folder(&p);
         }
-        if let Some(watcher) = app_handle.try_state::<Arc<std::sync::Mutex<crate::ingest::FileWatcher>>>() {
+        if let Some(watcher) =
+            app_handle.try_state::<Arc<std::sync::Mutex<crate::ingest::FileWatcher>>>()
+        {
             if let Ok(mut w) = watcher.lock() {
                 let _ = w.unwatch_directory(&p);
             }
         }
 
         // 2. Fetch list of files
-        tracing::info!("purge_folder_index: Job [{}]: Listing indexed files from DB for '{}'", jid, p);
+        tracing::info!(
+            "purge_folder_index: Job [{}]: Listing indexed files from DB for '{}'",
+            jid,
+            p
+        );
         let paths = match db.list_files_for_path(&p) {
             Ok(paths) => {
-                tracing::info!("purge_folder_index: Job [{}]: Found {} indexed files to delete for '{}'", jid, paths.len(), p);
+                tracing::info!(
+                    "purge_folder_index: Job [{}]: Found {} indexed files to delete for '{}'",
+                    jid,
+                    paths.len(),
+                    p
+                );
                 paths
             }
             Err(e) => {
-                tracing::error!("purge_folder_index: Job [{}]: Failed listing files for '{}': {}", jid, p, e);
+                tracing::error!(
+                    "purge_folder_index: Job [{}]: Failed listing files for '{}': {}",
+                    jid,
+                    p,
+                    e
+                );
                 dq.set_failed(&jid, e.to_string());
                 return;
             }
@@ -399,13 +454,22 @@ pub async fn purge_folder_index(
                 std::thread::sleep(std::time::Duration::from_millis(50));
             }
             if ctrl.is_stopped() {
-                tracing::warn!("purge_folder_index: Job [{}] stopped by user at {}/{} files", jid, deleted, total_paths);
+                tracing::warn!(
+                    "purge_folder_index: Job [{}] stopped by user at {}/{} files",
+                    jid,
+                    deleted,
+                    total_paths
+                );
                 dq.set_stopped(&jid);
                 return;
             }
 
             if let Err(e) = db.purge_files_batch(chunk) {
-                tracing::error!("purge_folder_index: Job [{}] failed purging batch: {}", jid, e);
+                tracing::error!(
+                    "purge_folder_index: Job [{}] failed purging batch: {}",
+                    jid,
+                    e
+                );
             }
             deleted += chunk.len();
             dq.update_progress(&jid, deleted);
@@ -422,14 +486,22 @@ pub async fn purge_folder_index(
             );
         }
 
-        tracing::info!("purge_folder_index: Job [{}] successfully purged all {} files for '{}'", jid, total_paths, p);
+        tracing::info!(
+            "purge_folder_index: Job [{}] successfully purged all {} files for '{}'",
+            jid,
+            total_paths,
+            p
+        );
         dq.set_done(&jid, total_paths);
 
         // VACUUM in a detached thread — reclaims disk pages so header DB size drops.
         // We deliberately don't hold the DB lock during the main delete loop.
         let db_vac = db.clone();
         std::thread::spawn(move || {
-            tracing::info!("purge_folder_index: Running VACUUM after purge job [{}]", jid);
+            tracing::info!(
+                "purge_folder_index: Running VACUUM after purge job [{}]",
+                jid
+            );
             if let Err(e) = db_vac.vacuum() {
                 tracing::warn!("purge_folder_index: VACUUM failed: {}", e);
             } else {
@@ -472,7 +544,10 @@ pub async fn remove_watched_folder(
         );
         // Enqueue delete job immediately (total computed in background thread)
         let (job_id, ctrl) = delete_queue.enqueue(
-            DeleteJobKind::RemoveFolder { folder_id: id.clone(), path: known_path.clone() },
+            DeleteJobKind::RemoveFolder {
+                folder_id: id.clone(),
+                path: known_path.clone(),
+            },
             format!("Remove & purge: {}", path_label),
             0,
         );
@@ -484,7 +559,11 @@ pub async fn remove_watched_folder(
         let mut fp = known_path.clone();
 
         std::thread::spawn(move || {
-            tracing::info!("remove_watched_folder: Worker thread started for job [{}] (folder_id: '{}')", job_id, folder_id);
+            tracing::info!(
+                "remove_watched_folder: Worker thread started for job [{}] (folder_id: '{}')",
+                job_id,
+                folder_id
+            );
             dq.set_running(&job_id);
 
             // Lookup path if missing
@@ -497,7 +576,11 @@ pub async fn remove_watched_folder(
             }
 
             // 1. Stop active crawl and file-system monitoring
-            tracing::info!("remove_watched_folder: Job [{}]: Cancelling crawl and file watcher for '{}'", job_id, fp);
+            tracing::info!(
+                "remove_watched_folder: Job [{}]: Cancelling crawl and file watcher for '{}'",
+                job_id,
+                fp
+            );
             if let Some(coord) = app_handle.try_state::<Arc<crate::crawler::CrawlCoordinator>>() {
                 coord.cancel_folder(&folder_id);
                 if !fp.is_empty() {
@@ -505,7 +588,9 @@ pub async fn remove_watched_folder(
                 }
             }
             if !fp.is_empty() {
-                if let Some(watcher) = app_handle.try_state::<Arc<std::sync::Mutex<crate::ingest::FileWatcher>>>() {
+                if let Some(watcher) =
+                    app_handle.try_state::<Arc<std::sync::Mutex<crate::ingest::FileWatcher>>>()
+                {
                     if let Ok(mut w) = watcher.lock() {
                         let _ = w.unwatch_directory(&fp);
                     }
@@ -513,20 +598,36 @@ pub async fn remove_watched_folder(
             }
 
             // 2. Remove from watchlist immediately in background
-            tracing::info!("remove_watched_folder: Job [{}]: Removing folder '{}' from DB watchlist", job_id, folder_id);
+            tracing::info!(
+                "remove_watched_folder: Job [{}]: Removing folder '{}' from DB watchlist",
+                job_id,
+                folder_id
+            );
             if let Err(e) = db_clone.remove_watched_folder(&folder_id) {
-                tracing::error!("remove_watched_folder: Job [{}]: Failed to remove folder from watchlist: {}", job_id, e);
+                tracing::error!(
+                    "remove_watched_folder: Job [{}]: Failed to remove folder from watchlist: {}",
+                    job_id,
+                    e
+                );
             }
 
             // 3. Purge indexed files
-            tracing::info!("remove_watched_folder: Job [{}]: Listing indexed files for path '{}'", job_id, fp);
+            tracing::info!(
+                "remove_watched_folder: Job [{}]: Listing indexed files for path '{}'",
+                job_id,
+                fp
+            );
             let paths = if !fp.is_empty() {
                 db_clone.list_files_for_path(&fp).unwrap_or_default()
             } else {
                 Vec::new()
             };
             let total_paths = paths.len();
-            tracing::info!("remove_watched_folder: Job [{}]: Found {} indexed files to purge", job_id, total_paths);
+            tracing::info!(
+                "remove_watched_folder: Job [{}]: Found {} indexed files to purge",
+                job_id,
+                total_paths
+            );
             dq.set_total(&job_id, total_paths);
 
             let mut deleted = 0usize;
@@ -535,24 +636,40 @@ pub async fn remove_watched_folder(
                     std::thread::sleep(std::time::Duration::from_millis(50));
                 }
                 if ctrl.is_stopped() {
-                    tracing::warn!("remove_watched_folder: Job [{}] stopped by user at {}/{} files", job_id, deleted, total_paths);
+                    tracing::warn!(
+                        "remove_watched_folder: Job [{}] stopped by user at {}/{} files",
+                        job_id,
+                        deleted,
+                        total_paths
+                    );
                     dq.set_stopped(&job_id);
                     return;
                 }
                 if let Err(e) = db_clone.purge_files_batch(chunk) {
-                    tracing::error!("remove_watched_folder: Job [{}] failed purging batch: {}", job_id, e);
+                    tracing::error!(
+                        "remove_watched_folder: Job [{}] failed purging batch: {}",
+                        job_id,
+                        e
+                    );
                 }
                 deleted += chunk.len();
                 dq.update_progress(&job_id, deleted);
             }
-            tracing::info!("remove_watched_folder: Job [{}] finished successfully, purged {} files", job_id, total_paths);
+            tracing::info!(
+                "remove_watched_folder: Job [{}] finished successfully, purged {} files",
+                job_id,
+                total_paths
+            );
             dq.set_done(&job_id, total_paths);
 
             // VACUUM to shrink the .db file on disk (reflected in telemetry header DB size)
             let db_vac = db_clone.clone();
             let jid_vac = job_id.clone();
             std::thread::spawn(move || {
-                tracing::info!("remove_watched_folder: Running VACUUM after job [{}]", jid_vac);
+                tracing::info!(
+                    "remove_watched_folder: Running VACUUM after job [{}]",
+                    jid_vac
+                );
                 if let Err(e) = db_vac.vacuum() {
                     tracing::warn!("remove_watched_folder: VACUUM failed: {}", e);
                 } else {
@@ -567,7 +684,11 @@ pub async fn remove_watched_folder(
             path: known_path,
         })
     } else {
-        tracing::info!("remove_watched_folder: Removing folder id '{}' (path: '{}', purge_data=false)", id, known_path);
+        tracing::info!(
+            "remove_watched_folder: Removing folder id '{}' (path: '{}', purge_data=false)",
+            id,
+            known_path
+        );
         // Not purging: remove watched folder & unwatch asynchronously
         let db_clone = db.inner().clone();
         let app_handle = app.clone();
@@ -583,14 +704,19 @@ pub async fn remove_watched_folder(
                 }
             }
             if !fp.is_empty() {
-                if let Some(watcher) = app_handle.try_state::<Arc<std::sync::Mutex<crate::ingest::FileWatcher>>>() {
+                if let Some(watcher) =
+                    app_handle.try_state::<Arc<std::sync::Mutex<crate::ingest::FileWatcher>>>()
+                {
                     if let Ok(mut w) = watcher.lock() {
                         let _ = w.unwatch_directory(&fp);
                     }
                 }
             }
             let _ = db_clone.remove_watched_folder(&folder_id);
-            tracing::info!("remove_watched_folder: Folder id '{}' removed from DB watchlist", folder_id);
+            tracing::info!(
+                "remove_watched_folder: Folder id '{}' removed from DB watchlist",
+                folder_id
+            );
         });
 
         Ok(crate::db::repository::PurgeFolderResult {
@@ -641,7 +767,9 @@ pub async fn reset_database_and_reindex(
 
     // 2. Enqueue the delete job immediately (total computed in background thread)
     let (job_id, ctrl) = delete_queue.enqueue(
-        DeleteJobKind::PurgeAll { factory_reset: is_factory },
+        DeleteJobKind::PurgeAll {
+            factory_reset: is_factory,
+        },
         label,
         0,
     );
@@ -664,8 +792,13 @@ pub async fn reset_database_and_reindex(
         dq.set_running(&jid);
 
         // Stop all FS watchers
-        tracing::info!("reset_database_and_reindex: Job [{}]: Unwatching directories before purge", jid);
-        let watcher_state = app_handle.try_state::<Arc<std::sync::Mutex<crate::ingest::FileWatcher>>>().map(|s| s.inner().clone());
+        tracing::info!(
+            "reset_database_and_reindex: Job [{}]: Unwatching directories before purge",
+            jid
+        );
+        let watcher_state = app_handle
+            .try_state::<Arc<std::sync::Mutex<crate::ingest::FileWatcher>>>()
+            .map(|s| s.inner().clone());
         if let Some(ref w) = watcher_state {
             if let Ok(mut w) = w.lock() {
                 if let Ok(folders) = db_clone.get_watched_folders() {
@@ -686,14 +819,25 @@ pub async fn reset_database_and_reindex(
         std::thread::sleep(std::time::Duration::from_millis(200)); // give crawl threads time to exit
 
         // Batch-delete all indexed files
-        tracing::info!("reset_database_and_reindex: Job [{}]: Listing all indexed files from database", jid);
+        tracing::info!(
+            "reset_database_and_reindex: Job [{}]: Listing all indexed files from database",
+            jid
+        );
         let all_paths = match db_clone.list_all_indexed_files() {
             Ok(p) => {
-                tracing::info!("reset_database_and_reindex: Job [{}]: Found {} indexed files to purge", jid, p.len());
+                tracing::info!(
+                    "reset_database_and_reindex: Job [{}]: Found {} indexed files to purge",
+                    jid,
+                    p.len()
+                );
                 p
             }
             Err(e) => {
-                tracing::error!("reset_database_and_reindex: Job [{}]: Failed listing indexed files: {}", jid, e);
+                tracing::error!(
+                    "reset_database_and_reindex: Job [{}]: Failed listing indexed files: {}",
+                    jid,
+                    e
+                );
                 dq.set_failed(&jid, e.to_string());
                 return;
             }
@@ -708,12 +852,21 @@ pub async fn reset_database_and_reindex(
                 std::thread::sleep(std::time::Duration::from_millis(50));
             }
             if ctrl.is_stopped() {
-                tracing::warn!("reset_database_and_reindex: Job [{}] stopped by user at {}/{} files", jid, deleted, total_paths);
+                tracing::warn!(
+                    "reset_database_and_reindex: Job [{}] stopped by user at {}/{} files",
+                    jid,
+                    deleted,
+                    total_paths
+                );
                 dq.set_stopped(&jid);
                 return;
             }
             if let Err(e) = db_clone.purge_files_batch(chunk) {
-                tracing::error!("reset_database_and_reindex: Job [{}] failed purging batch: {}", jid, e);
+                tracing::error!(
+                    "reset_database_and_reindex: Job [{}] failed purging batch: {}",
+                    jid,
+                    e
+                );
             }
             deleted += chunk.len();
             dq.update_progress(&jid, deleted);
@@ -722,11 +875,18 @@ pub async fn reset_database_and_reindex(
         // Final cleanup (triggers, FTS, VACUUM)
         tracing::info!("reset_database_and_reindex: Job [{}]: Performing final index purge & VACUUM (purge_all_index_data_fast)", jid);
         if let Err(e) = db_clone.purge_all_index_data_fast() {
-            tracing::error!("reset_database_and_reindex: Job [{}]: purge_all_index_data_fast failed: {}", jid, e);
+            tracing::error!(
+                "reset_database_and_reindex: Job [{}]: purge_all_index_data_fast failed: {}",
+                jid,
+                e
+            );
             dq.set_failed(&jid, e.to_string());
             return;
         }
-        tracing::info!("reset_database_and_reindex: Job [{}]: Final index purge complete", jid);
+        tracing::info!(
+            "reset_database_and_reindex: Job [{}]: Final index purge complete",
+            jid
+        );
 
         crawler_clone.controller().reset();
 
@@ -735,25 +895,38 @@ pub async fn reset_database_and_reindex(
             let defaults = crate::models::AppSettings::default();
             let _ = db_clone.save_app_settings(&defaults);
             if let Ok(folders) = db_clone.get_watched_folders() {
-                for f in &folders { let _ = db_clone.remove_watched_folder(&f.id); }
+                for f in &folders {
+                    let _ = db_clone.remove_watched_folder(&f.id);
+                }
             }
             if let Ok(blacklists) = db_clone.get_blacklist_folders() {
-                for b in &blacklists { let _ = db_clone.remove_blacklist_folder(&b.id); }
+                for b in &blacklists {
+                    let _ = db_clone.remove_blacklist_folder(&b.id);
+                }
             }
         } else if should_reindex {
             tracing::info!("reset_database_and_reindex: Job [{}]: Scheduling reindexing for enabled watched folders", jid);
             if let Ok(folders) = db_clone.get_watched_folders() {
                 let enabled: Vec<_> = folders.into_iter().filter(|f| f.enabled).collect();
-                let paths: Vec<std::path::PathBuf> = enabled.iter().map(|f| std::path::PathBuf::from(&f.path)).collect();
+                let paths: Vec<std::path::PathBuf> = enabled
+                    .iter()
+                    .map(|f| std::path::PathBuf::from(&f.path))
+                    .collect();
                 if !paths.is_empty() {
                     coordinator_clone.enqueue_folders(&enabled);
                     let crawler_run = crawler_clone.clone();
-                    std::thread::spawn(move || { crawler_run.crawl_paths(&paths); });
+                    std::thread::spawn(move || {
+                        crawler_run.crawl_paths(&paths);
+                    });
                 }
             }
         }
 
-        tracing::info!("reset_database_and_reindex: Job [{}] completed successfully (purged {} files)", jid, total_paths);
+        tracing::info!(
+            "reset_database_and_reindex: Job [{}] completed successfully (purged {} files)",
+            jid,
+            total_paths
+        );
         dq.set_done(&jid, total_paths);
     });
 
@@ -794,7 +967,10 @@ pub fn resume_delete_job(
     job_id: String,
     delete_queue: State<'_, Arc<DeleteQueue>>,
 ) -> Result<(), String> {
-    tracing::info!("resume_delete_job: UI requested resume for job [{}]", job_id);
+    tracing::info!(
+        "resume_delete_job: UI requested resume for job [{}]",
+        job_id
+    );
     delete_queue.resume_job(&job_id);
     Ok(())
 }
@@ -814,7 +990,10 @@ pub fn dismiss_delete_job(
     job_id: String,
     delete_queue: State<'_, Arc<DeleteQueue>>,
 ) -> Result<(), String> {
-    tracing::info!("dismiss_delete_job: UI requested dismissal of job [{}]", job_id);
+    tracing::info!(
+        "dismiss_delete_job: UI requested dismissal of job [{}]",
+        job_id
+    );
     delete_queue.dismiss_job(&job_id);
     Ok(())
 }
@@ -830,7 +1009,10 @@ pub fn requeue_folder_after_stop(
     coordinator: State<'_, Arc<crate::crawler::CrawlCoordinator>>,
     app: tauri::AppHandle,
 ) -> Result<(), String> {
-    tracing::info!("requeue_folder_after_stop: UI requested requeue for stopped job [{}]", job_id);
+    tracing::info!(
+        "requeue_folder_after_stop: UI requested requeue for stopped job [{}]",
+        job_id
+    );
     let job = delete_queue.get_job(&job_id).ok_or("Job not found")?;
 
     let folder_path = match &job.kind {
@@ -839,7 +1021,10 @@ pub fn requeue_folder_after_stop(
         DeleteJobKind::PurgeAll { .. } => return Err("Cannot re-queue a PurgeAll job".into()),
     };
 
-    tracing::info!("requeue_folder_after_stop: Restoring FS watcher and enqueuing crawl for '{}'", folder_path);
+    tracing::info!(
+        "requeue_folder_after_stop: Restoring FS watcher and enqueuing crawl for '{}'",
+        folder_path
+    );
 
     // Restore FS monitoring
     if let Some(watcher) = app.try_state::<Arc<std::sync::Mutex<crate::ingest::FileWatcher>>>() {
@@ -863,7 +1048,9 @@ pub fn requeue_folder_after_stop(
     }
     let path_buf = std::path::PathBuf::from(&folder_path);
     let crawler_run = crawler.inner().clone();
-    std::thread::spawn(move || { crawler_run.crawl_paths(&[path_buf]); });
+    std::thread::spawn(move || {
+        crawler_run.crawl_paths(&[path_buf]);
+    });
 
     // Remove the stopped job from the queue display
     delete_queue.dismiss_job(&job_id);

@@ -27,7 +27,11 @@ impl LmStudioClient {
     pub fn is_localhost(url: &str) -> bool {
         if let Ok(parsed) = reqwest::Url::parse(url) {
             if let Some(host) = parsed.host_str() {
-                return host == "localhost" || host == "127.0.0.1" || host == "0.0.0.0" || host == "::1" || host == "[::1]";
+                return host == "localhost"
+                    || host == "127.0.0.1"
+                    || host == "0.0.0.0"
+                    || host == "::1"
+                    || host == "[::1]";
             }
         }
         url.contains("localhost") || url.contains("127.0.0.1") || url.contains("0.0.0.0")
@@ -58,11 +62,19 @@ impl LmStudioClient {
                 true
             }
             Ok(res) => {
-                tracing::warn!("lm_studio: check_availability received status {} from {}", res.status(), models_url);
+                tracing::warn!(
+                    "lm_studio: check_availability received status {} from {}",
+                    res.status(),
+                    models_url
+                );
                 false
             }
             Err(e) => {
-                tracing::warn!("lm_studio: check_availability failed connecting to {}: {:?}", models_url, e);
+                tracing::warn!(
+                    "lm_studio: check_availability failed connecting to {}: {:?}",
+                    models_url,
+                    e
+                );
                 false
             }
         }
@@ -114,9 +126,15 @@ impl LmStudioClient {
                     }
 
                     // 3. Match by base name (e.g. "qwen3")
-                    let stem = clean_pref.split(|c| c == '-' || c == '_' || c == '.').next().unwrap_or(&clean_pref);
+                    let stem = clean_pref
+                        .split(|c| c == '-' || c == '_' || c == '.')
+                        .next()
+                        .unwrap_or(&clean_pref);
                     if stem.len() >= 3 {
-                        if let Some(matched) = candidate_models.iter().find(|m| m.to_lowercase().contains(stem)) {
+                        if let Some(matched) = candidate_models
+                            .iter()
+                            .find(|m| m.to_lowercase().contains(stem))
+                        {
                             return matched.clone();
                         }
                     }
@@ -154,12 +172,15 @@ impl LlmProvider for LmStudioClient {
         if !Self::is_localhost(&self.endpoint) {
             return Err("Endpoint must be local".into());
         }
-        
+
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(3))
             .build()?;
 
-        let unload_url = format!("{}/api/v1/models/unload", self.endpoint.trim_end_matches('/'));
+        let unload_url = format!(
+            "{}/api/v1/models/unload",
+            self.endpoint.trim_end_matches('/')
+        );
         let body = serde_json::json!({
             "model": self.model_name
         });
@@ -179,14 +200,19 @@ impl LlmProvider for LmStudioClient {
         token_sender: Sender<String>,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         if !Self::is_localhost(&self.endpoint) {
-            return Err("External cloud endpoints strictly prohibited for privacy (zero egress)".into());
+            return Err(
+                "External cloud endpoints strictly prohibited for privacy (zero egress)".into(),
+            );
         }
 
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(300))
             .build()?;
 
-        let gen_url = format!("{}/v1/chat/completions", self.endpoint.trim_end_matches('/'));
+        let gen_url = format!(
+            "{}/v1/chat/completions",
+            self.endpoint.trim_end_matches('/')
+        );
         let body = serde_json::json!({
             "model": self.model_name,
             "messages": [
@@ -198,7 +224,11 @@ impl LlmProvider for LmStudioClient {
             "stream": true
         });
 
-        tracing::info!("lm_studio generate_stream: sending request to {} with model '{}'", gen_url, self.model_name);
+        tracing::info!(
+            "lm_studio generate_stream: sending request to {} with model '{}'",
+            gen_url,
+            self.model_name
+        );
         let response = client.post(&gen_url).json(&body).send().await;
 
         match response {
@@ -235,29 +265,39 @@ impl LlmProvider for LmStudioClient {
                             if in_reasoning {
                                 let _ = token_sender.send("\n</think>\n".to_string()).await;
                             }
-                            tracing::info!("lm_studio generate_stream: stream finished ([DONE] received)");
+                            tracing::info!(
+                                "lm_studio generate_stream: stream finished ([DONE] received)"
+                            );
                             return Ok(());
                         }
 
                         if let Ok(json) = serde_json::from_str::<Value>(raw_line) {
-                            if let Some(delta) = json.get("choices")
+                            if let Some(delta) = json
+                                .get("choices")
                                 .and_then(|c| c.as_array())
                                 .and_then(|arr| arr.get(0))
                                 .and_then(|c| c.get("delta"))
                             {
-                                let reasoning_opt = delta.get("reasoning_content").and_then(|t| t.as_str());
+                                let reasoning_opt =
+                                    delta.get("reasoning_content").and_then(|t| t.as_str());
                                 let content_opt = delta.get("content").and_then(|t| t.as_str());
 
                                 if let Some(reasoning) = reasoning_opt {
                                     if !reasoning.is_empty() {
                                         if !in_reasoning {
                                             in_reasoning = true;
-                                            if token_sender.send("<think>\n".to_string()).await.is_err() {
+                                            if token_sender
+                                                .send("<think>\n".to_string())
+                                                .await
+                                                .is_err()
+                                            {
                                                 return Ok(());
                                             }
                                         }
                                         if token_sender.send(reasoning.to_string()).await.is_err() {
-                                            tracing::warn!("lm_studio generate_stream: token_sender closed");
+                                            tracing::warn!(
+                                                "lm_studio generate_stream: token_sender closed"
+                                            );
                                             return Ok(());
                                         }
                                     }
@@ -265,12 +305,18 @@ impl LlmProvider for LmStudioClient {
                                     if !content.is_empty() {
                                         if in_reasoning {
                                             in_reasoning = false;
-                                            if token_sender.send("\n</think>\n".to_string()).await.is_err() {
+                                            if token_sender
+                                                .send("\n</think>\n".to_string())
+                                                .await
+                                                .is_err()
+                                            {
                                                 return Ok(());
                                             }
                                         }
                                         if token_sender.send(content.to_string()).await.is_err() {
-                                            tracing::warn!("lm_studio generate_stream: token_sender closed");
+                                            tracing::warn!(
+                                                "lm_studio generate_stream: token_sender closed"
+                                            );
                                             return Ok(());
                                         }
                                     }

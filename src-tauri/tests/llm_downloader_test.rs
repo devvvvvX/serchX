@@ -28,14 +28,17 @@ fn test_model_storage_purge() {
 
     // Subsequent delete should return error
     let res_second = DownloadManager::delete_model("qwen2.5-3b-instruct-q4_k_m.gguf", tmp.path());
-    assert!(res_second.is_err(), "Deleting non-existent model should return error");
+    assert!(
+        res_second.is_err(),
+        "Deleting non-existent model should return error"
+    );
 }
 
 #[tokio::test]
 async fn test_resumable_downloader_sha256_verification() {
     let tmp = tempdir().unwrap();
     let content = b"This is a simulated GGUF model binary content for unit testing serchX.";
-    
+
     let mut hasher = Sha256::new();
     hasher.update(content);
     let expected_hash = format!("{:x}", hasher.finalize());
@@ -65,7 +68,10 @@ async fn test_resumable_downloader_sha256_verification() {
     std::io::copy(&mut check_file, &mut verify_hasher).unwrap();
     let actual_hash = format!("{:x}", verify_hasher.finalize());
 
-    assert_ne!(actual_hash, expected_hash, "Corrupt file hash must not match expected");
+    assert_ne!(
+        actual_hash, expected_hash,
+        "Corrupt file hash must not match expected"
+    );
 }
 
 #[test]

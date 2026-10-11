@@ -194,10 +194,16 @@ fn myers_diff(a: &[&str], b: &[&str]) -> Vec<(String, String)> {
         return Vec::new();
     }
     if n == 0 {
-        return b.iter().map(|&s| ("added".to_string(), s.to_string())).collect();
+        return b
+            .iter()
+            .map(|&s| ("added".to_string(), s.to_string()))
+            .collect();
     }
     if m == 0 {
-        return a.iter().map(|&s| ("removed".to_string(), s.to_string())).collect();
+        return a
+            .iter()
+            .map(|&s| ("removed".to_string(), s.to_string()))
+            .collect();
     }
 
     let max = n + m;
@@ -210,8 +216,11 @@ fn myers_diff(a: &[&str], b: &[&str]) -> Vec<(String, String)> {
     let mut found = false;
     for d in 0..=max {
         trace.push(v.clone());
-        for k in (-((d as isize))..=((d as isize))).step_by(2) {
-            let mut x = if k == -((d as isize)) || (k != (d as isize) && v[(k - 1 + offset) as usize] < v[(k + 1 + offset) as usize]) {
+        for k in (-(d as isize)..=(d as isize)).step_by(2) {
+            let mut x = if k == -(d as isize)
+                || (k != (d as isize)
+                    && v[(k - 1 + offset) as usize] < v[(k + 1 + offset) as usize])
+            {
                 v[(k + 1 + offset) as usize]
             } else {
                 v[(k - 1 + offset) as usize] + 1
@@ -245,7 +254,10 @@ fn myers_diff(a: &[&str], b: &[&str]) -> Vec<(String, String)> {
         let v_prev = &trace[d];
         let k = x - y;
 
-        let prev_k = if k == -((d as isize)) || (k != (d as isize) && v_prev[(k - 1 + offset) as usize] < v_prev[(k + 1 + offset) as usize]) {
+        let prev_k = if k == -(d as isize)
+            || (k != (d as isize)
+                && v_prev[(k - 1 + offset) as usize] < v_prev[(k + 1 + offset) as usize])
+        {
             k + 1
         } else {
             k - 1

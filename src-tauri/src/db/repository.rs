@@ -1,5 +1,8 @@
 use crate::db::schema;
-use crate::models::{Artifact, ArtifactVersion, BlacklistFolder, DocumentChunk, Entity, FileEvent, Relationship, WatchedFolder};
+use crate::models::{
+    Artifact, ArtifactVersion, BlacklistFolder, DocumentChunk, Entity, FileEvent, Relationship,
+    WatchedFolder,
+};
 use rusqlite::{params, Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
 use std::path::Path;
@@ -110,7 +113,7 @@ impl DatabaseManager {
 
     pub fn upsert_artifact(&self, path: &str, kind: &str) -> Result<Artifact, DbError> {
         let conn = self.lock_conn()?;
-        
+
         // Check if an existing version has this path to get the artifact_id
         let existing_id: Option<String> = conn
             .query_row(
@@ -151,7 +154,10 @@ impl DatabaseManager {
         Ok(artifact)
     }
 
-    pub fn get_latest_version_by_path(&self, path: &str) -> Result<Option<ArtifactVersion>, DbError> {
+    pub fn get_latest_version_by_path(
+        &self,
+        path: &str,
+    ) -> Result<Option<ArtifactVersion>, DbError> {
         let conn = self.lock_conn()?;
         let version = conn
             .query_row(
@@ -207,7 +213,10 @@ impl DatabaseManager {
         Ok(())
     }
 
-    pub fn get_artifact_versions_ordered(&self, artifact_id: &str) -> Result<Vec<ArtifactVersion>, DbError> {
+    pub fn get_artifact_versions_ordered(
+        &self,
+        artifact_id: &str,
+    ) -> Result<Vec<ArtifactVersion>, DbError> {
         let conn = self.lock_conn()?;
         let mut stmt = conn.prepare(
             r#"
@@ -446,7 +455,12 @@ impl DatabaseManager {
             INSERT OR REPLACE INTO relationships (source_id, target_id, relationship_type, weight)
             VALUES (?1, ?2, ?3, ?4)
             "#,
-            params![&rel.source_id, &rel.target_id, &rel.relationship_type, rel.weight],
+            params![
+                &rel.source_id,
+                &rel.target_id,
+                &rel.relationship_type,
+                rel.weight
+            ],
         )?;
         Ok(())
     }
@@ -564,20 +578,20 @@ impl DatabaseManager {
     /// Count all indexed files across all folders.
     pub fn count_all_indexed_files(&self) -> Result<usize, DbError> {
         let conn = self.lock_conn()?;
-        let count: usize = conn.query_row(
-            "SELECT COUNT(DISTINCT path) FROM artifact_versions",
-            [],
-            |r| r.get(0),
-        ).unwrap_or(0);
+        let count: usize = conn
+            .query_row(
+                "SELECT COUNT(DISTINCT path) FROM artifact_versions",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap_or(0);
         Ok(count)
     }
 
     /// List all indexed file paths across the entire database.
     pub fn list_all_indexed_files(&self) -> Result<Vec<String>, DbError> {
         let conn = self.lock_conn()?;
-        let mut stmt = conn.prepare(
-            "SELECT DISTINCT path FROM artifact_versions ORDER BY path",
-        )?;
+        let mut stmt = conn.prepare("SELECT DISTINCT path FROM artifact_versions ORDER BY path")?;
         let rows = stmt.query_map([], |r| r.get(0))?;
         Ok(rows.filter_map(|r| r.ok()).collect())
     }
@@ -604,7 +618,10 @@ impl DatabaseManager {
             return Ok(());
         }
         let start = std::time::Instant::now();
-        tracing::debug!("purge_files_batch: Purging batch of {} files", file_paths.len());
+        tracing::debug!(
+            "purge_files_batch: Purging batch of {} files",
+            file_paths.len()
+        );
         let mut conn = self.lock_conn()?;
         let tx = conn.transaction()?;
 
@@ -613,18 +630,27 @@ impl DatabaseManager {
         let _ = tx.execute("DROP TRIGGER IF EXISTS trg_chunks_fts_delete", []);
 
         let placeholders = file_paths.iter().map(|_| "?").collect::<Vec<_>>().join(",");
-        let params: Vec<&dyn rusqlite::ToSql> = file_paths.iter().map(|p| p as &dyn rusqlite::ToSql).collect();
+        let params: Vec<&dyn rusqlite::ToSql> = file_paths
+            .iter()
+            .map(|p| p as &dyn rusqlite::ToSql)
+            .collect();
 
         // 1. Fast direct FTS delete via indexed path column in a single batch scan
         let fts_query = format!("DELETE FROM chunks_fts WHERE path IN ({})", placeholders);
         let _ = tx.execute(&fts_query, params.as_slice());
 
         // 2. Cascade delete artifact_versions -> chunks -> chunk_vectors
-        let ver_query = format!("DELETE FROM artifact_versions WHERE path IN ({})", placeholders);
+        let ver_query = format!(
+            "DELETE FROM artifact_versions WHERE path IN ({})",
+            placeholders
+        );
         let _ = tx.execute(&ver_query, params.as_slice());
 
         // 3. Clean DLQ entries
-        let dlq_query = format!("DELETE FROM dead_letter_queue WHERE path IN ({})", placeholders);
+        let dlq_query = format!(
+            "DELETE FROM dead_letter_queue WHERE path IN ({})",
+            placeholders
+        );
         let _ = tx.execute(&dlq_query, params.as_slice());
 
         // Clean up orphan artifacts that have no remaining versions
@@ -673,16 +699,25 @@ impl DatabaseManager {
         {
             let mut conn = self.lock_conn()?;
             let tx = conn.transaction()?;
-            tracing::info!("purge_all_index_data_fast: Dropping FTS triggers & clearing chunks_fts");
+            tracing::info!("purge_all_index_data_fast: Dropping FTS table & triggers");
             let _ = tx.execute("DROP TRIGGER IF EXISTS trg_chunks_fts_insert", []);
             let _ = tx.execute("DROP TRIGGER IF EXISTS trg_chunks_fts_delete", []);
-            let _ = tx.execute("DELETE FROM chunks_fts", []);
+            // DROP TABLE removes the FTS5 shadow tables (chunks_fts_data, _idx, _content, _docsize).
+            // DELETE FROM chunks_fts only marks rows as tombstones — the shadow tables retain all data,
+            // which is why the DB stayed at ~146MB after factory reset.
+            let _ = tx.execute("DROP TABLE IF EXISTS chunks_fts", []);
             let _ = tx.execute("UPDATE watched_folders SET last_scanned_at = NULL", []);
+            // Clear tables not reached by cascade deletes:
+            // - `events` uses ON DELETE SET NULL so rows survive artifact deletion as orphans
+            // - `entities` and `relationships` have no FK link to artifacts at all
+            let _ = tx.execute("DELETE FROM events", []);
+            let _ = tx.execute("DELETE FROM entities", []);
+            let _ = tx.execute("DELETE FROM relationships", []);
             tx.commit()?;
             tracing::info!("purge_all_index_data_fast: Re-applying migrations / triggers");
             crate::db::schema::migrate(&conn)?;
         } // conn guard released here
-        // Now re-acquire for VACUUM (cannot VACUUM inside a transaction)
+          // Now re-acquire for VACUUM (cannot VACUUM inside a transaction)
         tracing::info!("purge_all_index_data_fast: Running VACUUM to reclaim disk space");
         let conn = self.lock_conn()?;
         let _ = conn.execute("VACUUM", []);
@@ -841,14 +876,12 @@ impl DatabaseManager {
 
         tracing::info!("purge_all_index_data: Counting chunks...");
         let chunks_count: usize = tx
-            .query_row(
-                "SELECT COUNT(*) FROM chunks",
-                [],
-                |row| row.get(0),
-            )
+            .query_row("SELECT COUNT(*) FROM chunks", [], |row| row.get(0))
             .unwrap_or(0);
 
-        tracing::info!("purge_all_index_data: Dropping FTS5 triggers to prevent O(N^2) deletion...");
+        tracing::info!(
+            "purge_all_index_data: Dropping FTS5 triggers to prevent O(N^2) deletion..."
+        );
         let _ = tx.execute("DROP TRIGGER IF EXISTS trg_chunks_fts_insert", []);
         let _ = tx.execute("DROP TRIGGER IF EXISTS trg_chunks_fts_delete", []);
 
@@ -856,8 +889,11 @@ impl DatabaseManager {
         let _ = tx.execute("DELETE FROM chunk_vectors", []);
         tracing::info!("purge_all_index_data: Deleting from chunks...");
         let _ = tx.execute("DELETE FROM chunks", []);
-        tracing::info!("purge_all_index_data: Deleting from chunks_fts...");
-        let _ = tx.execute("DELETE FROM chunks_fts", []);
+        tracing::info!(
+            "purge_all_index_data: Dropping chunks_fts table (frees FTS5 shadow tables)..."
+        );
+        // DROP TABLE removes the FTS5 shadow tables entirely; DELETE only leaves tombstones.
+        let _ = tx.execute("DROP TABLE IF EXISTS chunks_fts", []);
         tracing::info!("purge_all_index_data: Deleting from artifact_versions...");
         let _ = tx.execute("DELETE FROM artifact_versions", []);
         tracing::info!("purge_all_index_data: Deleting from artifacts...");
@@ -898,7 +934,11 @@ impl DatabaseManager {
         Ok(())
     }
 
-    pub fn update_watched_folder_last_scanned(&self, path: &str, timestamp: i64) -> Result<(), DbError> {
+    pub fn update_watched_folder_last_scanned(
+        &self,
+        path: &str,
+        timestamp: i64,
+    ) -> Result<(), DbError> {
         let conn = self.lock_conn()?;
         conn.execute(
             "UPDATE watched_folders SET last_scanned_at = ?1 WHERE path = ?2",
@@ -909,7 +949,9 @@ impl DatabaseManager {
 
     pub fn get_blacklist_folders(&self) -> Result<Vec<BlacklistFolder>, DbError> {
         let conn = self.lock_conn()?;
-        let mut stmt = conn.prepare("SELECT id, path, created_at FROM blacklist_folders ORDER BY created_at ASC")?;
+        let mut stmt = conn.prepare(
+            "SELECT id, path, created_at FROM blacklist_folders ORDER BY created_at ASC",
+        )?;
         let rows = stmt.query_map([], |row| {
             Ok(BlacklistFolder {
                 id: row.get(0)?,
@@ -960,7 +1002,8 @@ impl DatabaseManager {
             .into_iter()
             .filter(|w| {
                 let wp = Path::new(&w.path);
-                wp != blacklisted_path && crate::safety::filters::is_path_inside_or_equal(wp, blacklisted_path)
+                wp != blacklisted_path
+                    && crate::safety::filters::is_path_inside_or_equal(wp, blacklisted_path)
             })
             .map(|w| w.path)
             .collect();
@@ -1006,7 +1049,7 @@ impl DatabaseManager {
             LEFT JOIN chunks c ON c.version_id = lv.id
             WHERE lv.rn = 1
             GROUP BY lv.id;
-            "#
+            "#,
         )?;
 
         struct RawRow {
@@ -1072,12 +1115,22 @@ impl DatabaseManager {
             });
         }
 
-        let cat_order = ["Documents", "Code", "Images & OCR", "Data & Sheets", "Others"];
+        let cat_order = [
+            "Documents",
+            "Code",
+            "Images & OCR",
+            "Data & Sheets",
+            "Others",
+        ];
         let mut categories = Vec::new();
 
         for cat_name in &cat_order {
             if let Some((f_count, b_count, mut exts)) = cat_map.remove(*cat_name) {
-                exts.sort_by(|a, b| b.file_count.cmp(&a.file_count).then_with(|| b.total_bytes.cmp(&a.total_bytes)));
+                exts.sort_by(|a, b| {
+                    b.file_count
+                        .cmp(&a.file_count)
+                        .then_with(|| b.total_bytes.cmp(&a.total_bytes))
+                });
                 categories.push(CategoryStat {
                     category: cat_name.to_string(),
                     file_count: f_count,
@@ -1105,7 +1158,10 @@ impl DatabaseManager {
         })
     }
 
-    pub fn get_storage_breakdown(&self, db_path: Option<&std::path::Path>) -> Result<StorageBreakdown, DbError> {
+    pub fn get_storage_breakdown(
+        &self,
+        db_path: Option<&std::path::Path>,
+    ) -> Result<StorageBreakdown, DbError> {
         let conn = self.lock_conn()?;
         let original_files_bytes: i64 = conn.query_row(
             r#"
@@ -1118,22 +1174,26 @@ impl DatabaseManager {
             |r| r.get(0),
         ).unwrap_or(0);
 
-        let text_chunks_bytes: i64 = conn.query_row(
-            "SELECT COALESCE(SUM(LENGTH(content)), 0) FROM chunks;",
-            [],
-            |r| r.get(0),
-        ).unwrap_or(0);
+        let text_chunks_bytes: i64 = conn
+            .query_row(
+                "SELECT COALESCE(SUM(LENGTH(content)), 0) FROM chunks;",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap_or(0);
 
-        let vector_index_bytes: i64 = conn.query_row(
-            "SELECT COALESCE(SUM(LENGTH(embedding)), 0) FROM chunk_vectors;",
-            [],
-            |r| r.get(0),
-        ).unwrap_or(0);
+        let vector_index_bytes: i64 = conn
+            .query_row(
+                "SELECT COALESCE(SUM(LENGTH(embedding)), 0) FROM chunk_vectors;",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap_or(0);
 
         let sqlite_db_bytes = if let Some(p) = db_path {
-            std::fs::metadata(p).map(|m| m.len()).unwrap_or_else(|_| {
-                crate::benchmark::telemetry::get_sqlite_disk_bytes(&conn)
-            })
+            std::fs::metadata(p)
+                .map(|m| m.len())
+                .unwrap_or_else(|_| crate::benchmark::telemetry::get_sqlite_disk_bytes(&conn))
         } else {
             crate::benchmark::telemetry::get_sqlite_disk_bytes(&conn)
         };
@@ -1219,7 +1279,10 @@ impl DatabaseManager {
     }
 
     // Dead Letter Queue operations
-    pub fn insert_or_update_dead_letter(&self, item: &crate::models::DeadLetterItem) -> Result<(), DbError> {
+    pub fn insert_or_update_dead_letter(
+        &self,
+        item: &crate::models::DeadLetterItem,
+    ) -> Result<(), DbError> {
         let conn = self.lock_conn()?;
         conn.execute(
             r#"
@@ -1283,7 +1346,10 @@ impl DatabaseManager {
 
     pub fn remove_dead_letter_by_path(&self, path: &str) -> Result<(), DbError> {
         let conn = self.lock_conn()?;
-        conn.execute("DELETE FROM dead_letter_queue WHERE path = ?1", params![path])?;
+        conn.execute(
+            "DELETE FROM dead_letter_queue WHERE path = ?1",
+            params![path],
+        )?;
         Ok(())
     }
 
@@ -1295,7 +1361,8 @@ impl DatabaseManager {
 
     pub fn get_dead_letter_count(&self) -> Result<usize, DbError> {
         let conn = self.lock_conn()?;
-        let count: i64 = conn.query_row("SELECT COUNT(*) FROM dead_letter_queue", [], |r| r.get(0))?;
+        let count: i64 =
+            conn.query_row("SELECT COUNT(*) FROM dead_letter_queue", [], |r| r.get(0))?;
         Ok(count.max(0) as usize)
     }
 }
@@ -1327,17 +1394,20 @@ mod tests {
         assert!(folders[0].enabled);
 
         // 3. Toggle enabled
-        db.update_watched_folder_enabled("folder-123", false).expect("toggle enabled");
+        db.update_watched_folder_enabled("folder-123", false)
+            .expect("toggle enabled");
         let enabled_folders = db.get_enabled_watched_folders().expect("get enabled");
         assert!(enabled_folders.is_empty());
 
         // 4. Update last scanned
-        db.update_folder_last_scanned("folder-123", 2000).expect("update scan time");
+        db.update_folder_last_scanned("folder-123", 2000)
+            .expect("update scan time");
         let updated = db.get_watched_folders().expect("get folders");
         assert_eq!(updated[0].last_scanned_at, Some(2000));
 
         // 5. Remove folder
-        db.remove_watched_folder("folder-123").expect("remove folder");
+        db.remove_watched_folder("folder-123")
+            .expect("remove folder");
         let remaining = db.get_watched_folders().expect("get folders");
         assert!(remaining.is_empty());
     }
@@ -1368,7 +1438,10 @@ mod tests {
         db.record_version(&version1).expect("record v1");
 
         // 3. Query back latest version
-        let latest = db.get_latest_version_by_path(path).expect("get latest").expect("should exist");
+        let latest = db
+            .get_latest_version_by_path(path)
+            .expect("get latest")
+            .expect("should exist");
         assert_eq!(latest.id, v1_id);
         assert_eq!(latest.content_hash, "hash_v1");
 
@@ -1445,7 +1518,8 @@ mod tests {
             file_name: "broken.pdf".to_string(),
             file_size: 1024,
             error_type: "Extraction".to_string(),
-            error_message: "Failed to extract text from PDF: PDF error: unsupported key length".to_string(),
+            error_message: "Failed to extract text from PDF: PDF error: unsupported key length"
+                .to_string(),
             failed_at: 1000,
             retry_count: 1,
             status: "pending".to_string(),
@@ -1471,7 +1545,8 @@ mod tests {
             retry_count: 1,
             status: "pending".to_string(),
         };
-        db.insert_or_update_dead_letter(&item1_retry).expect("upsert dlq");
+        db.insert_or_update_dead_letter(&item1_retry)
+            .expect("upsert dlq");
         assert_eq!(db.get_dead_letter_count().unwrap(), 1);
 
         let items = db.get_dead_letter_items().unwrap();
@@ -1491,11 +1566,13 @@ mod tests {
             retry_count: 1,
             status: "pending".to_string(),
         };
-        db.insert_or_update_dead_letter(&item2).expect("insert dlq 2");
+        db.insert_or_update_dead_letter(&item2)
+            .expect("insert dlq 2");
         assert_eq!(db.get_dead_letter_count().unwrap(), 2);
 
         // 5. Remove by path
-        db.remove_dead_letter_by_path("/path/to/broken.pdf").expect("remove by path");
+        db.remove_dead_letter_by_path("/path/to/broken.pdf")
+            .expect("remove by path");
         assert_eq!(db.get_dead_letter_count().unwrap(), 1);
 
         // 6. Clear queue
@@ -1506,33 +1583,61 @@ mod tests {
     #[test]
     fn test_window_position_persistence() {
         let db = DatabaseManager::new_in_memory().expect("failed to init db");
-        assert_eq!(db.get_window_position().expect("get initial position"), None);
+        assert_eq!(
+            db.get_window_position().expect("get initial position"),
+            None
+        );
 
         db.save_window_position(340, 180).expect("save position");
-        assert_eq!(db.get_window_position().expect("get saved position"), Some((340, 180)));
+        assert_eq!(
+            db.get_window_position().expect("get saved position"),
+            Some((340, 180))
+        );
 
         db.save_window_position(500, 220).expect("update position");
-        assert_eq!(db.get_window_position().expect("get updated position"), Some((500, 220)));
+        assert_eq!(
+            db.get_window_position().expect("get updated position"),
+            Some((500, 220))
+        );
     }
 
     #[test]
     fn test_blacklist_repository() {
         let db = DatabaseManager::new_in_memory().expect("failed to init db");
 
-        assert_eq!(db.get_blacklist_folders().expect("get empty blacklist").len(), 0);
+        assert_eq!(
+            db.get_blacklist_folders()
+                .expect("get empty blacklist")
+                .len(),
+            0
+        );
 
-        let folder = db.add_blacklist_folder("/Users/test/Secret").expect("add blacklist folder");
+        let folder = db
+            .add_blacklist_folder("/Users/test/Secret")
+            .expect("add blacklist folder");
         assert_eq!(folder.path, "/Users/test/Secret");
-        assert!(db.is_folder_blacklisted("/Users/test/Secret").expect("check blacklisted"));
-        assert!(!db.is_folder_blacklisted("/Users/test/Public").expect("check not blacklisted"));
+        assert!(db
+            .is_folder_blacklisted("/Users/test/Secret")
+            .expect("check blacklisted"));
+        assert!(!db
+            .is_folder_blacklisted("/Users/test/Public")
+            .expect("check not blacklisted"));
 
         let list = db.get_blacklist_folders().expect("get list");
         assert_eq!(list.len(), 1);
         assert_eq!(list[0].id, folder.id);
 
-        db.remove_blacklist_folder(&folder.id).expect("remove blacklist folder");
-        assert_eq!(db.get_blacklist_folders().expect("get empty after remove").len(), 0);
-        assert!(!db.is_folder_blacklisted("/Users/test/Secret").expect("check not blacklisted after remove"));
+        db.remove_blacklist_folder(&folder.id)
+            .expect("remove blacklist folder");
+        assert_eq!(
+            db.get_blacklist_folders()
+                .expect("get empty after remove")
+                .len(),
+            0
+        );
+        assert!(!db
+            .is_folder_blacklisted("/Users/test/Secret")
+            .expect("check not blacklisted after remove"));
     }
 
     #[test]
@@ -1603,7 +1708,9 @@ mod tests {
         db.insert_chunks(&c1).unwrap();
         db.insert_chunks(&c2).unwrap();
 
-        let purge_res = db.purge_folder_data("/Users/test/Docs").expect("purge folder");
+        let purge_res = db
+            .purge_folder_data("/Users/test/Docs")
+            .expect("purge folder");
         assert_eq!(purge_res.files_removed, 2);
         assert_eq!(purge_res.chunks_removed, 2);
 
@@ -1742,19 +1849,22 @@ mod tests {
             version_id: "v1".to_string(),
             chunk_index: 0,
             content: "Parent".to_string(),
-        }]).unwrap();
+        }])
+        .unwrap();
         db.insert_chunks(&[DocumentChunk {
             id: "c2".to_string(),
             version_id: "v2".to_string(),
             chunk_index: 0,
             content: "Secret".to_string(),
-        }]).unwrap();
+        }])
+        .unwrap();
         db.insert_chunks(&[DocumentChunk {
             id: "c3".to_string(),
             version_id: "v3".to_string(),
             chunk_index: 0,
             content: "Public".to_string(),
-        }]).unwrap();
+        }])
+        .unwrap();
 
         // Register PublicOverride as an explicit watched folder
         db.add_watched_folder(&WatchedFolder {
@@ -1764,21 +1874,32 @@ mod tests {
             recursive: true,
             added_at: 1000,
             last_scanned_at: None,
-        }).unwrap();
+        })
+        .unwrap();
 
         // Now add /Users/test/Workspace/Secret to blacklist
-        db.add_blacklist_folder("/Users/test/Workspace/Secret").unwrap();
+        db.add_blacklist_folder("/Users/test/Workspace/Secret")
+            .unwrap();
 
         // 1. Blacklisted secret file should be purged!
-        assert!(db.get_latest_version_by_path(blacklisted_file).unwrap().is_none());
+        assert!(db
+            .get_latest_version_by_path(blacklisted_file)
+            .unwrap()
+            .is_none());
         assert!(db.get_chunks_for_version("v2").unwrap().is_empty());
 
         // 2. Parent file outside blacklist remains intact!
-        assert!(db.get_latest_version_by_path(parent_file).unwrap().is_some());
+        assert!(db
+            .get_latest_version_by_path(parent_file)
+            .unwrap()
+            .is_some());
         assert_eq!(db.get_chunks_for_version("v1").unwrap().len(), 1);
 
         // 3. Watched override child folder inside blacklist is preserved!
-        assert!(db.get_latest_version_by_path(override_file).unwrap().is_some());
+        assert!(db
+            .get_latest_version_by_path(override_file)
+            .unwrap()
+            .is_some());
         assert_eq!(db.get_chunks_for_version("v3").unwrap().len(), 1);
     }
 
@@ -1807,7 +1928,8 @@ mod tests {
             version_id: "v1".to_string(),
             chunk_index: 0,
             content: "sample text 1".to_string(),
-        }]).unwrap();
+        }])
+        .unwrap();
 
         let art2 = db.upsert_artifact(file2, "file").unwrap();
         let v2 = ArtifactVersion {
@@ -1828,7 +1950,8 @@ mod tests {
             version_id: "v2".to_string(),
             chunk_index: 0,
             content: "sample text 2".to_string(),
-        }]).unwrap();
+        }])
+        .unwrap();
 
         assert!(db.get_latest_version_by_path(file1).unwrap().is_some());
         assert!(db.get_latest_version_by_path(file2).unwrap().is_some());
@@ -1843,5 +1966,3 @@ mod tests {
         assert!(db.get_sqlite_size_bytes() > 0);
     }
 }
-
-

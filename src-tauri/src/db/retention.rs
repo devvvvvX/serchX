@@ -26,7 +26,9 @@ pub fn prune_unpinned_versions(
 
     let mut pruned_count = 0;
     let now = chrono::Utc::now().timestamp_millis();
-    let cutoff_timestamp = policy.retention_days.map(|days| now - (days * 86_400 * 1000));
+    let cutoff_timestamp = policy
+        .retention_days
+        .map(|days| now - (days * 86_400 * 1000));
 
     // Get all distinct artifact IDs
     let artifact_ids: Vec<String> = {
@@ -74,7 +76,10 @@ pub fn prune_unpinned_versions(
 
             if exceeds_cap || exceeds_age {
                 // Delete associated chunks (cascading into FTS5 via trigger)
-                tx.execute("DELETE FROM chunks WHERE version_id = ?1", params![&version_id])?;
+                tx.execute(
+                    "DELETE FROM chunks WHERE version_id = ?1",
+                    params![&version_id],
+                )?;
                 // Delete version
                 tx.execute(
                     "DELETE FROM artifact_versions WHERE id = ?1",

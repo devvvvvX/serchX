@@ -172,7 +172,6 @@ fn test_crawl_smoke_pause_resume() {
     engine.resume();
     assert!(!engine.get_progress().is_paused);
 
-
     handle.join().unwrap();
     let final_progress = engine.get_progress();
     assert_eq!(final_progress.indexed_count, 150);

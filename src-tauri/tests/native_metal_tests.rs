@@ -18,9 +18,15 @@ async fn test_native_metal_runner_model_load_nonexistent() {
         "non-existent-model".to_string(),
     );
     let result = runner.load_model();
-    assert!(result.is_err(), "Loading a non-existent model should fail with an error");
+    assert!(
+        result.is_err(),
+        "Loading a non-existent model should fail with an error"
+    );
     let err_msg = result.err().unwrap().to_string();
-    assert!(err_msg.contains("does not exist"), "Error message should state file does not exist");
+    assert!(
+        err_msg.contains("does not exist"),
+        "Error message should state file does not exist"
+    );
 }
 
 #[test]
@@ -46,11 +52,7 @@ fn test_native_format_prompt() {
     assert!(llama_res.ends_with("<|start_header_id|>assistant<|end_header_id|>\n\n"));
 
     // 3. Fallback generic model
-    let generic_res = format_prompt(
-        "Hello world",
-        "Be helpful",
-        "custom-model.gguf",
-    );
+    let generic_res = format_prompt("Hello world", "Be helpful", "custom-model.gguf");
     assert_eq!(generic_res, "Be helpful\n\nHello world");
 }
 
@@ -83,8 +85,14 @@ async fn test_native_token_stream_cancel() {
         .generate_stream("test prompt", "", 0.2, 512, cancel_token, tx)
         .await;
 
-    assert!(result.is_ok(), "Pre-cancelled generation should exit cleanly with Ok(())");
-    assert!(rx.recv().await.is_none(), "No tokens should be sent when pre-cancelled");
+    assert!(
+        result.is_ok(),
+        "Pre-cancelled generation should exit cleanly with Ok(())"
+    );
+    assert!(
+        rx.recv().await.is_none(),
+        "No tokens should be sent when pre-cancelled"
+    );
 }
 
 #[tokio::test]
@@ -104,13 +112,27 @@ async fn test_native_cancellation_during_generation() {
 
     let start = std::time::Instant::now();
     let _ = runner
-        .generate_stream("What is the revenue?", "You are an assistant.", 0.2, 512, cancel_token, tx)
+        .generate_stream(
+            "What is the revenue?",
+            "You are an assistant.",
+            0.2,
+            512,
+            cancel_token,
+            tx,
+        )
         .await;
     let elapsed = start.elapsed();
 
-    assert!(elapsed < std::time::Duration::from_millis(100), "Generation halt must complete within 100ms, took {:?}", elapsed);
+    assert!(
+        elapsed < std::time::Duration::from_millis(100),
+        "Generation halt must complete within 100ms, took {:?}",
+        elapsed
+    );
     let _ = cancel_handle.await;
-    assert!(rx.recv().await.is_none(), "No tokens emitted on cancelled stream");
+    assert!(
+        rx.recv().await.is_none(),
+        "No tokens emitted on cancelled stream"
+    );
 }
 
 #[test]
@@ -124,7 +146,8 @@ fn test_native_grounded_synthesis_citations() {
             file_path: "/Users/alice/Documents/Quarterly_Financials_Q3.pdf".to_string(),
             modified_at: Some("2024-09-30 14:00".to_string()),
             version_id: "v1".to_string(),
-            text_snippet: "Operating margin increased by 4.2% year-over-year reaching $18.4M.".to_string(),
+            text_snippet: "Operating margin increased by 4.2% year-over-year reaching $18.4M."
+                .to_string(),
             relevance_score: 0.94,
         },
         StructuredEvidence {
@@ -134,15 +157,22 @@ fn test_native_grounded_synthesis_citations() {
             file_path: "/Users/alice/Documents/Product_Roadmap_2025.docx".to_string(),
             modified_at: Some("2024-10-01 09:30".to_string()),
             version_id: "v2".to_string(),
-            text_snippet: "Deployment of native Metal inference engine scheduled for Phase 06.1 release.".to_string(),
+            text_snippet:
+                "Deployment of native Metal inference engine scheduled for Phase 06.1 release."
+                    .to_string(),
             relevance_score: 0.88,
         },
     ];
 
-    let (system_prompt, user_prompt) = builder.build_prompt("What are the financial and technical milestones?", &evidence);
+    let (system_prompt, user_prompt) = builder.build_prompt(
+        "What are the financial and technical milestones?",
+        &evidence,
+    );
 
     // Verify grounded prompt formatting
-    assert!(system_prompt.contains("Every factual claim MUST cite its source using inline bracketed numbers like [1] or [2]."));
+    assert!(system_prompt.contains(
+        "Every factual claim MUST cite its source using inline bracketed numbers like [1] or [2]."
+    ));
     assert!(user_prompt.contains("[1] Title: \"Quarterly_Financials_Q3.pdf\""));
     assert!(user_prompt.contains("[2] Title: \"Product_Roadmap_2025.docx\""));
     assert!(user_prompt.contains("Operating margin increased by 4.2%"));
@@ -150,7 +180,11 @@ fn test_native_grounded_synthesis_citations() {
     assert!(user_prompt.contains("Please synthesize the answer based exclusively on the evidence above, citing sources inline."));
 
     // Verify formatting with Qwen template
-    let qwen_prompt = format_prompt(&user_prompt, &system_prompt, "qwen2.5-3b-instruct-q4_k_m.gguf");
+    let qwen_prompt = format_prompt(
+        &user_prompt,
+        &system_prompt,
+        "qwen2.5-3b-instruct-q4_k_m.gguf",
+    );
     assert!(qwen_prompt.starts_with("<|im_start|>system\n"));
     assert!(qwen_prompt.contains("<|im_start|>user\nUser Query:"));
     assert!(qwen_prompt.ends_with("<|im_start|>assistant\n"));
@@ -162,8 +196,14 @@ fn test_native_grounded_synthesis_citations() {
     assert!(occ_prompt.ends_with("<|im_start|>assistant\n"));
 
     // Verify formatting with Llama template
-    let llama_prompt = format_prompt(&user_prompt, &system_prompt, "llama-3.2-3b-instruct-q4_k_m.gguf");
-    assert!(llama_prompt.starts_with("<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n"));
+    let llama_prompt = format_prompt(
+        &user_prompt,
+        &system_prompt,
+        "llama-3.2-3b-instruct-q4_k_m.gguf",
+    );
+    assert!(
+        llama_prompt.starts_with("<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n")
+    );
     assert!(llama_prompt.contains("<|start_header_id|>user<|end_header_id|>\n\nUser Query:"));
     assert!(llama_prompt.ends_with("<|start_header_id|>assistant<|end_header_id|>\n\n"));
 
@@ -176,7 +216,8 @@ fn test_native_grounded_synthesis_citations() {
 #[test]
 fn test_native_refusal_when_no_evidence() {
     let builder = ContextBuilder::new(5, 1200);
-    let (system_prompt, user_prompt) = builder.build_prompt("Where are my secret offshore bank accounts?", &[]);
+    let (system_prompt, user_prompt) =
+        builder.build_prompt("Where are my secret offshore bank accounts?", &[]);
 
     // Empty evidence prompt
     assert!(user_prompt.contains("(No matching local file evidence found.)"));
@@ -186,7 +227,11 @@ fn test_native_refusal_when_no_evidence() {
     assert!(system_prompt.contains("\"I could not find enough evidence in your local files to answer this question with confidence.\""));
 
     // Formatted model prompt retains refusal instructions
-    let formatted = format_prompt(&user_prompt, &system_prompt, "qwen2.5-3b-instruct-q4_k_m.gguf");
+    let formatted = format_prompt(
+        &user_prompt,
+        &system_prompt,
+        "qwen2.5-3b-instruct-q4_k_m.gguf",
+    );
     assert!(formatted.contains("I could not find enough evidence in your local files to answer this question with confidence."));
     assert!(formatted.contains("(No matching local file evidence found.)"));
     assert!(validate_prompt_tokens(formatted.len() / 4, 2048).is_ok());
@@ -236,4 +281,3 @@ async fn test_native_memory_lifecycle_ttl() {
     assert!(!runner.is_loaded());
     assert!(runner.memory_usage_bytes().is_none());
 }
-

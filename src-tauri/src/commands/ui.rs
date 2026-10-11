@@ -280,7 +280,8 @@ pub fn show_window(app: AppHandle) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("main") {
         let _ = window.unminimize();
         if let Some((x, y)) = get_recorded_window_position() {
-            let _ = window.set_position(tauri::Position::Physical(tauri::PhysicalPosition { x, y }));
+            let _ =
+                window.set_position(tauri::Position::Physical(tauri::PhysicalPosition { x, y }));
         }
         window
             .show()
@@ -325,7 +326,8 @@ pub fn toggle_window(app: AppHandle) -> Result<(), String> {
         } else {
             let _ = window.unminimize();
             if let Some((x, y)) = get_recorded_window_position() {
-                let _ = window.set_position(tauri::Position::Physical(tauri::PhysicalPosition { x, y }));
+                let _ = window
+                    .set_position(tauri::Position::Physical(tauri::PhysicalPosition { x, y }));
             }
             let _ = window.show();
             let _ = window.set_focus();
@@ -413,7 +415,8 @@ fn sample_process_cpu() -> f32 {
     };
 
     let now = std::time::Instant::now();
-    static LAST_CPU: std::sync::Mutex<Option<(std::time::Instant, f64)>> = std::sync::Mutex::new(None);
+    static LAST_CPU: std::sync::Mutex<Option<(std::time::Instant, f64)>> =
+        std::sync::Mutex::new(None);
     if let Ok(mut guard) = LAST_CPU.lock() {
         if let Some((last_time, last_cpu)) = *guard {
             let elapsed_wall = now.duration_since(last_time).as_secs_f64();
@@ -431,12 +434,16 @@ fn sample_process_cpu() -> f32 {
 }
 
 pub fn collect_system_telemetry(db: &DatabaseManager) -> SystemTelemetry {
-    let memory_rss_mb = (crate::benchmark::telemetry::get_current_rss_bytes() as f64) / (1024.0 * 1024.0);
+    let memory_rss_mb =
+        (crate::benchmark::telemetry::get_current_rss_bytes() as f64) / (1024.0 * 1024.0);
     let db_bytes = db.get_sqlite_size_bytes();
     let db_size_mb = (db_bytes as f64) / (1024.0 * 1024.0);
 
     static START_TIME: std::sync::OnceLock<std::time::Instant> = std::sync::OnceLock::new();
-    let uptime = START_TIME.get_or_init(std::time::Instant::now).elapsed().as_secs();
+    let uptime = START_TIME
+        .get_or_init(std::time::Instant::now)
+        .elapsed()
+        .as_secs();
     let cpu_percent = sample_process_cpu();
 
     SystemTelemetry {
@@ -475,7 +482,9 @@ pub async fn get_system_telemetry(
 }
 
 #[tauri::command]
-pub async fn get_corpus_analytics(db: State<'_, Arc<DatabaseManager>>) -> Result<CorpusAnalytics, String> {
+pub async fn get_corpus_analytics(
+    db: State<'_, Arc<DatabaseManager>>,
+) -> Result<CorpusAnalytics, String> {
     let db = db.inner().clone();
     tokio::task::spawn_blocking(move || db.get_corpus_analytics().map_err(|e| e.to_string()))
         .await
@@ -483,7 +492,9 @@ pub async fn get_corpus_analytics(db: State<'_, Arc<DatabaseManager>>) -> Result
 }
 
 #[tauri::command]
-pub async fn get_storage_breakdown(db: State<'_, Arc<DatabaseManager>>) -> Result<StorageBreakdown, String> {
+pub async fn get_storage_breakdown(
+    db: State<'_, Arc<DatabaseManager>>,
+) -> Result<StorageBreakdown, String> {
     let db = db.inner().clone();
     tokio::task::spawn_blocking(move || db.get_storage_breakdown(None).map_err(|e| e.to_string()))
         .await
@@ -491,12 +502,17 @@ pub async fn get_storage_breakdown(db: State<'_, Arc<DatabaseManager>>) -> Resul
 }
 
 #[tauri::command]
-pub fn get_blacklist_folders(db: State<'_, Arc<DatabaseManager>>) -> Result<Vec<BlacklistFolder>, String> {
+pub fn get_blacklist_folders(
+    db: State<'_, Arc<DatabaseManager>>,
+) -> Result<Vec<BlacklistFolder>, String> {
     db.get_blacklist_folders().map_err(|e| e.to_string())
 }
 
 #[tauri::command]
-pub fn add_blacklist_folder(path: String, db: State<'_, Arc<DatabaseManager>>) -> Result<BlacklistFolder, String> {
+pub fn add_blacklist_folder(
+    path: String,
+    db: State<'_, Arc<DatabaseManager>>,
+) -> Result<BlacklistFolder, String> {
     let p = Path::new(&path);
     if !p.exists() {
         return Err(format!("Directory does not exist: {}", path));
@@ -505,7 +521,10 @@ pub fn add_blacklist_folder(path: String, db: State<'_, Arc<DatabaseManager>>) -
 }
 
 #[tauri::command]
-pub fn remove_blacklist_folder(id: String, db: State<'_, Arc<DatabaseManager>>) -> Result<(), String> {
+pub fn remove_blacklist_folder(
+    id: String,
+    db: State<'_, Arc<DatabaseManager>>,
+) -> Result<(), String> {
     db.remove_blacklist_folder(&id).map_err(|e| e.to_string())
 }
 
@@ -514,7 +533,7 @@ pub async fn quick_look_file(path: String, app: tauri::AppHandle) -> Result<(), 
     #[cfg(target_os = "macos")]
     {
         set_dialog_active(true);
-        
+
         // Temporarily disable always-on-top so Quick Look isn't hidden behind the search bar
         if let Some(window) = app.get_webview_window("main") {
             let _ = window.set_always_on_top(false);
@@ -537,7 +556,7 @@ pub async fn quick_look_file(path: String, app: tauri::AppHandle) -> Result<(), 
             }
         }
         set_dialog_active(false);
-        
+
         // Restore focus and always-on-top to our main window explicitly
         if let Some(window) = app.get_webview_window("main") {
             let _ = window.set_always_on_top(true);

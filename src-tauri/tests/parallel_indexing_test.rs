@@ -59,12 +59,17 @@ fn test_db_batch_writer() {
         });
     }
 
-    db.persist_ingestion_batch(&items).expect("batch insert should succeed");
+    db.persist_ingestion_batch(&items)
+        .expect("batch insert should succeed");
 
     // Verify FTS5 search index was populated via triggers
     let fts = Fts5SearchEngine::new(db.clone());
     let results = fts.search("unique", 20).expect("fts search");
-    assert_eq!(results.len(), 10, "All 10 documents should be indexed in FTS5");
+    assert_eq!(
+        results.len(),
+        10,
+        "All 10 documents should be indexed in FTS5"
+    );
 
     let specific_result = fts.search("number 7", 5).expect("fts specific search");
     assert_eq!(specific_result.len(), 1);
@@ -80,7 +85,12 @@ fn test_parallel_indexing_and_race_condition_freedom() {
     let ocr = Arc::new(AppleVisionOcr::new());
     let filter = Arc::new(FileFilter::default());
 
-    let pipeline = Arc::new(IngestionPipeline::with_filter(db.clone(), extractors, ocr, filter.clone()));
+    let pipeline = Arc::new(IngestionPipeline::with_filter(
+        db.clone(),
+        extractors,
+        ocr,
+        filter.clone(),
+    ));
     let controller = serchx_lib::crawler::CrawlController::new();
     let coordinator = Arc::new(serchx_lib::crawler::CrawlCoordinator::new(None));
 
@@ -121,6 +131,8 @@ fn test_parallel_indexing_and_race_condition_freedom() {
 
     // Search FTS5 to verify all 100 files are searchable
     let fts = Fts5SearchEngine::new(db.clone());
-    let search_results = fts.search("keywordAlpha", 200).expect("fts search keywordAlpha");
+    let search_results = fts
+        .search("keywordAlpha", 200)
+        .expect("fts search keywordAlpha");
     assert_eq!(search_results.len(), total_files);
 }
