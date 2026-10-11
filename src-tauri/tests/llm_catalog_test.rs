@@ -49,7 +49,7 @@ fn test_app_settings_llm_defaults() {
     assert_eq!(settings.llm_provider, "native");
     assert_eq!(settings.active_llm_model, "qwen2.5-1.5b-instruct-q4_k_m");
     assert_eq!(settings.custom_llm_endpoint, "http://127.0.0.1:11434");
-    assert_eq!(settings.llm_context_window, 4096);
+    assert_eq!(settings.llm_context_window, 8192);
     assert_eq!(settings.llm_temperature, 0.2);
     assert!(settings.llm_enabled);
 }
