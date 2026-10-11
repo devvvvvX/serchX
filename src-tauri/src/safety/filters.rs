@@ -94,9 +94,10 @@ impl FileFilter {
     /// Creates a filter with specific absolute paths excluded from indexing.
     /// Use this to prevent the app from indexing its own data directory.
     pub fn with_excluded_paths(excluded_paths: Vec<PathBuf>) -> Self {
-        let mut filter = Self::default();
-        filter.excluded_paths = excluded_paths;
-        filter
+        FileFilter {
+            excluded_paths,
+            ..Default::default()
+        }
     }
 
     pub fn is_ignored_directory_name(&self, name: &str) -> bool {
@@ -331,8 +332,10 @@ pub mod tests {
         assert!(filter.should_index_path(&small_file, &meta).is_ok());
 
         // File too large
-        let mut custom_filter = FileFilter::default();
-        custom_filter.max_file_size_bytes = 10;
+        let custom_filter = FileFilter {
+            max_file_size_bytes: 10,
+            ..Default::default()
+        };
         let large_file = temp_dir.path().join("large.txt");
         {
             let mut f = std::fs::File::create(&large_file).unwrap();

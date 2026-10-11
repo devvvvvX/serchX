@@ -127,7 +127,7 @@ impl LmStudioClient {
 
                     // 3. Match by base name (e.g. "qwen3")
                     let stem = clean_pref
-                        .split(|c| c == '-' || c == '_' || c == '.')
+                        .split(['-', '_', '.'])
                         .next()
                         .unwrap_or(&clean_pref);
                     if stem.len() >= 3 {
@@ -275,7 +275,7 @@ impl LlmProvider for LmStudioClient {
                             if let Some(delta) = json
                                 .get("choices")
                                 .and_then(|c| c.as_array())
-                                .and_then(|arr| arr.get(0))
+                                .and_then(|arr| arr.first())
                                 .and_then(|c| c.get("delta"))
                             {
                                 let reasoning_opt =

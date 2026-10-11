@@ -369,3 +369,9 @@ impl DeleteQueue {
         self.jobs.read().ok()?.iter().find(|j| j.id == id).cloned()
     }
 }
+
+impl Default for DeleteQueue {
+    fn default() -> Self {
+        Self::new()
+    }
+}

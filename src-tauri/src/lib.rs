@@ -233,7 +233,7 @@ pub fn run() {
             // Set macOS default activation policy to Accessory (hide from Dock by default)
             #[cfg(target_os = "macos")]
             {
-                let _ = app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+                app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             }
 
             // Setup macOS Menu Bar System Tray
@@ -386,22 +386,20 @@ pub fn run() {
                     crate::commands::ui::record_window_position(pos.x, pos.y);
                 }
             }
-            tauri::WindowEvent::Focused(false) => {
-                if window.label() == "main" {
-                    if let Ok(mut lock) = last_blur_instant_win.lock() {
-                        *lock = Some(Instant::now());
-                    }
-                    if let Ok(pos) = window.outer_position() {
-                        crate::commands::ui::record_window_position(pos.x, pos.y);
-                    }
-                    if let Some(db) = window.app_handle().try_state::<Arc<DatabaseManager>>() {
-                        let _ = crate::commands::ui::persist_window_position(&db);
-                    }
-                    if !crate::commands::ui::is_dialog_active()
-                        && crate::commands::ui::is_auto_hide_enabled()
-                    {
-                        let _ = window.hide();
-                    }
+            tauri::WindowEvent::Focused(false) if window.label() == "main" => {
+                if let Ok(mut lock) = last_blur_instant_win.lock() {
+                    *lock = Some(Instant::now());
+                }
+                if let Ok(pos) = window.outer_position() {
+                    crate::commands::ui::record_window_position(pos.x, pos.y);
+                }
+                if let Some(db) = window.app_handle().try_state::<Arc<DatabaseManager>>() {
+                    let _ = crate::commands::ui::persist_window_position(&db);
+                }
+                if !crate::commands::ui::is_dialog_active()
+                    && crate::commands::ui::is_auto_hide_enabled()
+                {
+                    let _ = window.hide();
                 }
             }
             _ => {}

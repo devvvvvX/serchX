@@ -164,10 +164,10 @@ impl LlmProvider for OllamaClient {
 
                         if let Ok(json) = serde_json::from_str::<Value>(raw_line) {
                             if let Some(token) = json.get("response").and_then(|r| r.as_str()) {
-                                if !token.is_empty() {
-                                    if token_sender.send(token.to_string()).await.is_err() {
-                                        return Ok(());
-                                    }
+                                if !token.is_empty()
+                                    && token_sender.send(token.to_string()).await.is_err()
+                                {
+                                    return Ok(());
                                 }
                             }
                             if json.get("done").and_then(|d| d.as_bool()).unwrap_or(false) {
@@ -229,10 +229,10 @@ impl LlmProvider for OllamaClient {
                             if let Ok(json) = serde_json::from_str::<Value>(data) {
                                 if let Some(delta) = json["choices"][0]["delta"]["content"].as_str()
                                 {
-                                    if !delta.is_empty() {
-                                        if token_sender.send(delta.to_string()).await.is_err() {
-                                            return Ok(());
-                                        }
+                                    if !delta.is_empty()
+                                        && token_sender.send(delta.to_string()).await.is_err()
+                                    {
+                                        return Ok(());
                                     }
                                 }
                             }

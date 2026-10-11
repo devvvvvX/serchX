@@ -11,6 +11,12 @@ impl PlainTextExtractor {
     }
 }
 
+impl Default for PlainTextExtractor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DocumentExtractor for PlainTextExtractor {
     fn can_handle(&self, extension: &str) -> bool {
         matches!(

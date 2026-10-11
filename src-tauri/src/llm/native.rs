@@ -311,11 +311,9 @@ impl LlmProvider for NativeMetalRunner {
                 let mut piece_str = String::with_capacity(piece.len() + 8);
                 let _ = decoder.decode_to_string(&piece, &mut piece_str, false);
 
-                if !piece_str.is_empty() {
-                    if blocking_tx.blocking_send(piece_str).is_err() {
-                        tracing::warn!("native generation loop: blocking channel receiver dropped");
-                        break;
-                    }
+                if !piece_str.is_empty() && blocking_tx.blocking_send(piece_str).is_err() {
+                    tracing::warn!("native generation loop: blocking channel receiver dropped");
+                    break;
                 }
 
                 if n_cur + 1 >= limit {

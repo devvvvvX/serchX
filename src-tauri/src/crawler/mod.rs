@@ -200,7 +200,7 @@ impl CrawlerEngine {
             let analysis_res = crate::commands::onboarding::analyze_folder_path(
                 &root_str,
                 true,
-                &self.pipeline.db(),
+                self.pipeline.db(),
             );
 
             // Check if cancelled during analysis

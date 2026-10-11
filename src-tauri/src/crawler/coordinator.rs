@@ -719,13 +719,10 @@ impl CrawlCoordinator {
     pub fn pause_folder(&self, folder_id: &str) {
         let is_active = {
             if let Ok(mut inner) = self.inner.write() {
-                let active = inner.active_folder.as_mut().and_then(|a| {
-                    if a.id == folder_id || paths_match(&a.path, folder_id) {
-                        Some(a)
-                    } else {
-                        None
-                    }
-                });
+                let active = inner
+                    .active_folder
+                    .as_mut()
+                    .filter(|a| a.id == folder_id || paths_match(&a.path, folder_id));
                 if let Some(a) = active {
                     a.is_paused = true;
                     true
@@ -762,13 +759,10 @@ impl CrawlCoordinator {
     pub fn resume_folder(&self, folder_id: &str) {
         let is_active = {
             if let Ok(mut inner) = self.inner.write() {
-                let active = inner.active_folder.as_mut().and_then(|a| {
-                    if a.id == folder_id || paths_match(&a.path, folder_id) {
-                        Some(a)
-                    } else {
-                        None
-                    }
-                });
+                let active = inner
+                    .active_folder
+                    .as_mut()
+                    .filter(|a| a.id == folder_id || paths_match(&a.path, folder_id));
                 if let Some(a) = active {
                     a.is_paused = false;
                     true

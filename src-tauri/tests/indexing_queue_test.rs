@@ -146,7 +146,7 @@ fn test_crawler_engine_updates_coordinator_during_crawl() {
     coordinator.enqueue_folders(&[watched]);
 
     // Perform crawl
-    let progress = engine.crawl_paths(&[docs_dir.clone()]);
+    let progress = engine.crawl_paths(std::slice::from_ref(&docs_dir));
     assert_eq!(progress.indexed_count, 5);
 
     // Check coordinator state post-crawl
@@ -350,7 +350,7 @@ fn test_two_phase_analysis_then_indexing_lifecycle() {
         last_scanned_at: None,
     };
 
-    coordinator.enqueue_folders(&[folder.clone()]);
+    coordinator.enqueue_folders(std::slice::from_ref(&folder));
     let snap0 = coordinator.get_snapshot();
     assert_eq!(snap0.pending_queue[0].status, QueueFolderStatus::Queued);
 

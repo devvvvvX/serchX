@@ -156,7 +156,7 @@ impl LlmProvider for OpenAiCompatClient {
                             if let Some(delta) = json
                                 .get("choices")
                                 .and_then(|c| c.as_array())
-                                .and_then(|arr| arr.get(0))
+                                .and_then(|arr| arr.first())
                                 .and_then(|c| c.get("delta"))
                             {
                                 let reasoning_opt =

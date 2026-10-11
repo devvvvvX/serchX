@@ -10,7 +10,14 @@ impl PdfExtractor {
     }
 }
 
+impl Default for PdfExtractor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[cfg(target_os = "macos")]
+#[allow(deprecated, unexpected_cfgs)]
 pub fn extract_pdf_native_macos(path: &Path) -> Option<String> {
     use cocoa::base::{id, nil};
     use cocoa::foundation::NSString;
@@ -35,10 +42,7 @@ pub fn extract_pdf_native_macos(path: &Path) -> Option<String> {
             return None;
         }
 
-        let pdf_doc_class = match objc::runtime::Class::get("PDFDocument") {
-            Some(c) => c,
-            None => return None,
-        };
+        let pdf_doc_class = objc::runtime::Class::get("PDFDocument")?;
 
         let doc: id = msg_send![pdf_doc_class, alloc];
         let doc: id = msg_send![doc, initWithURL: ns_url];

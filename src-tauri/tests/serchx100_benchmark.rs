@@ -621,9 +621,9 @@ async fn test_serchx100_benchmark_evaluation_and_report() {
         }
 
         let rank = rank_found;
-        let hit_top1 = rank.map_or(false, |r| r == 1);
-        let hit_top3 = rank.map_or(false, |r| r <= 3);
-        let hit_top5 = rank.map_or(false, |r| r <= 5);
+        let hit_top1 = rank == Some(1);
+        let hit_top3 = rank.is_some_and(|r| r <= 3);
+        let hit_top5 = rank.is_some_and(|r| r <= 5);
         let reciprocal_rank = rank.map_or(0.0, |r| 1.0 / (r as f32));
 
         evaluations.push(QueryEvaluation {

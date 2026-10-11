@@ -38,23 +38,24 @@ pub async fn get_model_catalog(
                     for item in data {
                         if let Some(id) = item.get("id").and_then(|i| i.as_str()) {
                             let lower = id.to_lowercase();
-                            if !lower.contains("embed") && !lower.contains("bge") {
-                                if !models.iter().any(|m| m.id == id || m.filename.contains(id)) {
-                                    models.push(ModelCatalogItem {
-                                        id: id.to_string(),
-                                        display_name: format!("LM Studio: {}", id),
-                                        tier: crate::llm::hardware::ModelTier::Standard,
-                                        parameter_size: "Remote / API".to_string(),
-                                        quantization: "API".to_string(),
-                                        download_size_bytes: 0,
-                                        download_url: String::new(),
-                                        sha256: String::new(),
-                                        filename: id.to_string(),
-                                        is_downloaded: true,
-                                        is_active: id == settings.active_llm_model,
-                                        is_custom: true,
-                                    });
-                                }
+                            if !lower.contains("embed")
+                                && !lower.contains("bge")
+                                && !models.iter().any(|m| m.id == id || m.filename.contains(id))
+                            {
+                                models.push(ModelCatalogItem {
+                                    id: id.to_string(),
+                                    display_name: format!("LM Studio: {}", id),
+                                    tier: crate::llm::hardware::ModelTier::Standard,
+                                    parameter_size: "Remote / API".to_string(),
+                                    quantization: "API".to_string(),
+                                    download_size_bytes: 0,
+                                    download_url: String::new(),
+                                    sha256: String::new(),
+                                    filename: id.to_string(),
+                                    is_downloaded: true,
+                                    is_active: id == settings.active_llm_model,
+                                    is_custom: true,
+                                });
                             }
                         }
                     }
@@ -368,9 +369,9 @@ pub fn import_custom_model(
     }
 
     // Expand ~ if present
-    let path = if raw.starts_with("~/") {
+    let path = if let Some(stripped) = raw.strip_prefix("~/") {
         if let Some(home) = dirs::home_dir() {
-            home.join(&raw[2..])
+            home.join(stripped)
         } else {
             std::path::PathBuf::from(raw)
         }

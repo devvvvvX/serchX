@@ -16,8 +16,8 @@ pub struct PowerStatus {
 }
 
 #[cfg(target_os = "macos")]
+#[allow(deprecated, unexpected_cfgs)]
 pub fn get_thermal_state() -> ThermalState {
-    #[allow(deprecated)]
     use cocoa::base::id;
     use objc::{msg_send, sel, sel_impl};
     unsafe {

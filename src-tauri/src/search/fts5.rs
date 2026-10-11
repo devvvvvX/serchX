@@ -80,7 +80,7 @@ impl Fts5SearchEngine {
             return Ok(Vec::new());
         }
 
-        let conn = self.db.lock_conn().map_err(|e| SearchError::Db(e))?;
+        let conn = self.db.lock_conn().map_err(SearchError::Db)?;
 
         let sql = r#"
             SELECT chunk_id, artifact_id, version_id, path,
@@ -173,7 +173,7 @@ mod tests {
             chunks.push(DocumentChunk {
                 id: format!("chunk_{}", i),
                 version_id: version_id.to_string(),
-                chunk_index: i as i32,
+                chunk_index: i,
                 content: content.to_string(),
             });
         }

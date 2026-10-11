@@ -187,7 +187,7 @@ fn test_crawler_respects_blacklist_and_child_override() {
     assert_eq!(watched[0].path, dir_c.to_string_lossy());
 
     // Verify exception override detection helper
-    let is_override = is_watched_folder_blacklist_override(&dir_c, &[dir_a.clone()]);
+    let is_override = is_watched_folder_blacklist_override(&dir_c, std::slice::from_ref(&dir_a));
     assert!(
         is_override,
         "A/C must be flagged as a blacklist override child!"
@@ -207,7 +207,7 @@ fn test_crawler_respects_blacklist_and_child_override() {
     let engine = CrawlerEngine::new(pipeline, controller, filter, None);
 
     // Crawl starting at dir_c (or crawl all watched folders)
-    let progress = engine.crawl_paths(&[dir_c.clone()]);
+    let progress = engine.crawl_paths(std::slice::from_ref(&dir_c));
 
     // Exactly 2 files indexed: file2.txt and file3.txt
     assert_eq!(
@@ -218,7 +218,7 @@ fn test_crawler_respects_blacklist_and_child_override() {
 
     // If crawl is triggered on parent root (or if A is traversed),
     // A/B and A/D files should NOT be indexed because A is blacklisted!
-    let progress_all = engine.crawl_paths(&[dir_a.clone()]);
+    let progress_all = engine.crawl_paths(std::slice::from_ref(&dir_a));
     // file2.txt and file3.txt were already indexed (so skipped as identical versions),
     // file1 and file4 must NOT be indexed.
     assert_eq!(progress_all.failed_count, 0);

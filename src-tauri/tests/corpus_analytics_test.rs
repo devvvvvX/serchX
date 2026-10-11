@@ -12,7 +12,7 @@ fn test_corpus_analytics_categorization_and_metrics() {
     // 3. Images & OCR: 1 PNG (8000 bytes, 0 chunks)
     // 4. Data & Sheets: 1 CSV (2000 bytes, 1 chunk)
 
-    let test_files = vec![
+    let test_files = [
         ("/docs/report.pdf", "pdf", 5000, 2),
         ("/docs/specification.docx", "docx", 3000, 1),
         ("/code/main.rs", "rs", 1500, 1),
@@ -64,7 +64,7 @@ fn test_corpus_analytics_categorization_and_metrics() {
         analytics.total_bytes,
         5000 + 3000 + 1500 + 1000 + 8000 + 2000
     );
-    assert_eq!(analytics.total_chunks, 2 + 1 + 1 + 1 + 0 + 1);
+    assert_eq!(analytics.total_chunks, 2 + 1 + 1 + 1 + 1);
 
     // Verify categories
     let doc_cat = analytics

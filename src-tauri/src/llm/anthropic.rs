@@ -153,10 +153,10 @@ impl LlmProvider for AnthropicCompatClient {
                                     .and_then(|d| d.get("text"))
                                     .and_then(|t| t.as_str())
                                 {
-                                    if !token.is_empty() {
-                                        if token_sender.send(token.to_string()).await.is_err() {
-                                            return Ok(());
-                                        }
+                                    if !token.is_empty()
+                                        && token_sender.send(token.to_string()).await.is_err()
+                                    {
+                                        return Ok(());
                                     }
                                 }
                             } else if type_str == "message_stop" {

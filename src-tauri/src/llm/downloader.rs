@@ -348,7 +348,7 @@ impl DownloadManager {
         } else {
             let err = match status {
                 reqwest::StatusCode::NOT_FOUND => {
-                    format!("Model file not found on Hugging Face (404 Not Found). The download URL may be invalid.")
+                    "Model file not found on Hugging Face (404 Not Found). The download URL may be invalid.".to_string()
                 }
                 reqwest::StatusCode::FORBIDDEN | reqwest::StatusCode::UNAUTHORIZED => {
                     format!("Access denied by Hugging Face ({}). The repository may be gated or private.", status)

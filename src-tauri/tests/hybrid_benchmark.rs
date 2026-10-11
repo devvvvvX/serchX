@@ -197,8 +197,10 @@ async fn test_corpus_overflow_and_fts_graceful_degradation() {
 
     // Verify search graceful degradation: disable semantic search (simulating overflow mode)
     let (_, engine, _, _) = setup_benchmark_corpus(500);
-    let mut degraded_settings = AppSettings::default();
-    degraded_settings.semantic_search_enabled = false;
+    let degraded_settings = AppSettings {
+        semantic_search_enabled: false,
+        ..Default::default()
+    };
 
     let results = engine
         .search("invoice consulting", 10, &degraded_settings)
@@ -226,9 +228,11 @@ async fn test_dynamic_settings_weight_adjustments() {
     let engine = HybridSearchEngine::new(db.clone(), fts, vector_index, scheduler);
 
     // 1. Search with heavy FTS weight
-    let mut fts_heavy = AppSettings::default();
-    fts_heavy.fts_weight = 5.0;
-    fts_heavy.vector_weight = 0.1;
+    let fts_heavy = AppSettings {
+        fts_weight: 5.0,
+        vector_weight: 0.1,
+        ..Default::default()
+    };
 
     let fts_heavy_results = engine
         .search("budget spreadsheet in Documents", 10, &fts_heavy)
@@ -236,9 +240,11 @@ async fn test_dynamic_settings_weight_adjustments() {
         .unwrap();
 
     // 2. Search with heavy Vector weight
-    let mut vec_heavy = AppSettings::default();
-    vec_heavy.fts_weight = 0.1;
-    vec_heavy.vector_weight = 5.0;
+    let vec_heavy = AppSettings {
+        fts_weight: 0.1,
+        vector_weight: 5.0,
+        ..Default::default()
+    };
 
     let vec_heavy_results = engine
         .search("budget spreadsheet in Documents", 10, &vec_heavy)

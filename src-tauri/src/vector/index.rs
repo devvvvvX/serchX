@@ -203,7 +203,11 @@ mod tests {
 
         let v1 = vec![1.0, 0.0, 0.0];
         let v2 = vec![0.0, 1.0, 0.0];
-        let v3 = vec![0.7071, 0.7071, 0.0];
+        let v3 = vec![
+            std::f32::consts::FRAC_1_SQRT_2,
+            std::f32::consts::FRAC_1_SQRT_2,
+            0.0,
+        ];
 
         index.insert_vector("c1", &v1).expect("insert c1");
         index.insert_vector("c2", &v2).expect("insert c2");
@@ -218,7 +222,7 @@ mod tests {
         assert_eq!(results[0].0, "c1");
         assert!((results[0].1 - 1.0).abs() < 1e-4);
         assert_eq!(results[1].0, "c3");
-        assert!((results[1].1 - 0.7071).abs() < 1e-3);
+        assert!((results[1].1 - std::f32::consts::FRAC_1_SQRT_2).abs() < 1e-3);
         assert_eq!(results[2].0, "c2");
         assert!((results[2].1 - 0.0).abs() < 1e-4);
 

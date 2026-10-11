@@ -61,8 +61,10 @@ pub fn analyze_folder_path(
         .map(|b| PathBuf::from(b.path))
         .collect();
 
-    let mut filter = crate::safety::FileFilter::default();
-    filter.max_file_size_bytes = (settings.max_file_size_mb as u64) * 1024 * 1024;
+    let filter = crate::safety::FileFilter {
+        max_file_size_bytes: settings.max_file_size_mb * 1024 * 1024,
+        ..Default::default()
+    };
 
     let mut report = FolderAnalysisReport {
         folder_path: path_str.to_string(),
@@ -298,7 +300,7 @@ pub fn trigger_folder_scan(
             .iter()
             .find(|f| crate::crawler::coordinator::paths_match(&f.path, &path))
         {
-            coordinator.enqueue_folders(&[folder.clone()]);
+            coordinator.enqueue_folders(std::slice::from_ref(folder));
         }
     }
     let crawler_run = crawler.inner().clone();
@@ -335,7 +337,7 @@ pub fn toggle_watched_folder(
                         if let Some(coordinator) =
                             app.try_state::<Arc<crate::crawler::CrawlCoordinator>>()
                         {
-                            coordinator.enqueue_folders(&[folder.clone()]);
+                            coordinator.enqueue_folders(std::slice::from_ref(folder));
                         }
                         if let Some(crawler) = app.try_state::<Arc<crate::crawler::CrawlerEngine>>()
                         {
@@ -528,7 +530,7 @@ pub async fn remove_watched_folder(
     let path_label = if !known_path.is_empty() {
         known_path
             .trim_end_matches('/')
-            .rsplitn(2, '/')
+            .rsplit('/')
             .next()
             .unwrap_or(&known_path)
             .to_string()
@@ -1043,7 +1045,7 @@ pub fn requeue_folder_after_stop(
     // Enqueue a crawl
     if let Ok(folders) = db.get_watched_folders() {
         if let Some(folder) = folders.iter().find(|f| f.path == folder_path) {
-            coordinator.enqueue_folders(&[folder.clone()]);
+            coordinator.enqueue_folders(std::slice::from_ref(folder));
         }
     }
     let path_buf = std::path::PathBuf::from(&folder_path);

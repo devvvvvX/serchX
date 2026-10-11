@@ -371,7 +371,7 @@ impl DatabaseManager {
                 let metadata_str = event
                     .metadata
                     .as_ref()
-                    .map(|m| serde_json::to_string(m))
+                    .map(serde_json::to_string)
                     .transpose()?;
 
                 tx.execute(
@@ -423,7 +423,7 @@ impl DatabaseManager {
         let metadata_str = event
             .metadata
             .as_ref()
-            .map(|m| serde_json::to_string(m))
+            .map(serde_json::to_string)
             .transpose()?;
 
         conn.execute(
@@ -1141,7 +1141,7 @@ impl DatabaseManager {
         }
 
         for (cat_name, (f_count, b_count, mut exts)) in cat_map {
-            exts.sort_by(|a, b| b.file_count.cmp(&a.file_count));
+            exts.sort_by_key(|a| std::cmp::Reverse(a.file_count));
             categories.push(CategoryStat {
                 category: cat_name,
                 file_count: f_count,
