@@ -206,11 +206,14 @@ For JavaScript and CSS in `ui/`:
 serchX maintains an extensive test suite covering indexing pipelines, parser fallbacks, FTS5 latency, and differential diffs:
 
 ```bash
-# Run all unit and integration tests
+# Convenient runner script for all tests
+./scripts/run_tests.sh
+
+# Or directly with Cargo
 cargo test --manifest-path src-tauri/Cargo.toml
 
 # Run a specific test suite
-cargo test --manifest-path src-tauri/Cargo.toml --test folder_analysis_test
+./scripts/run_tests.sh --test folder_analysis_test
 cargo test --manifest-path src-tauri/Cargo.toml --test indexing_queue_test
 cargo test --manifest-path src-tauri/Cargo.toml --test llm_engine_test
 ```

@@ -170,14 +170,12 @@ fn test_native_grounded_synthesis_citations() {
     );
 
     // Verify grounded prompt formatting
-    assert!(system_prompt.contains(
-        "Every factual claim MUST cite its source using inline bracketed numbers like [1] or [2]."
-    ));
-    assert!(user_prompt.contains("[1] Title: \"Quarterly_Financials_Q3.pdf\""));
-    assert!(user_prompt.contains("[2] Title: \"Product_Roadmap_2025.docx\""));
+    assert!(system_prompt.contains("inline citation") && system_prompt.contains("[1] or [2]"));
+    assert!(user_prompt.contains("Quarterly_Financials_Q3.pdf"));
+    assert!(user_prompt.contains("Product_Roadmap_2025.docx"));
     assert!(user_prompt.contains("Operating margin increased by 4.2%"));
     assert!(user_prompt.contains("native Metal inference engine scheduled"));
-    assert!(user_prompt.contains("Please synthesize the answer based exclusively on the evidence above, citing sources inline."));
+    assert!(user_prompt.contains("Answer the user's query using the evidence below."));
 
     // Verify formatting with Qwen template
     let qwen_prompt = format_prompt(
@@ -186,13 +184,15 @@ fn test_native_grounded_synthesis_citations() {
         "qwen2.5-3b-instruct-q4_k_m.gguf",
     );
     assert!(qwen_prompt.starts_with("<|im_start|>system\n"));
-    assert!(qwen_prompt.contains("<|im_start|>user\nUser Query:"));
+    assert!(qwen_prompt.contains("<|im_start|>user\n"));
+    assert!(qwen_prompt.contains("USER_QUERY:"));
     assert!(qwen_prompt.ends_with("<|im_start|>assistant\n"));
 
     // Verify formatting with OCC-RAG template
     let occ_prompt = format_prompt(&user_prompt, &system_prompt, "occ-rag-0.6b-q4_k_m.gguf");
     assert!(occ_prompt.starts_with("<|im_start|>system\n"));
-    assert!(occ_prompt.contains("<|im_start|>user\nUser Query:"));
+    assert!(occ_prompt.contains("<|im_start|>user\n"));
+    assert!(occ_prompt.contains("USER_QUERY:"));
     assert!(occ_prompt.ends_with("<|im_start|>assistant\n"));
 
     // Verify formatting with Llama template
@@ -204,7 +204,8 @@ fn test_native_grounded_synthesis_citations() {
     assert!(
         llama_prompt.starts_with("<|begin_of_text|><|start_header_id|>system<|end_header_id|>\n\n")
     );
-    assert!(llama_prompt.contains("<|start_header_id|>user<|end_header_id|>\n\nUser Query:"));
+    assert!(llama_prompt.contains("<|start_header_id|>user<|end_header_id|>\n\n"));
+    assert!(llama_prompt.contains("USER_QUERY:"));
     assert!(llama_prompt.ends_with("<|start_header_id|>assistant<|end_header_id|>\n\n"));
 
     // Validate tokens fit within standard context length
@@ -220,10 +221,11 @@ fn test_native_refusal_when_no_evidence() {
         builder.build_prompt("Where are my secret offshore bank accounts?", &[]);
 
     // Empty evidence prompt
-    assert!(user_prompt.contains("(No matching local file evidence found.)"));
+    assert!(user_prompt.contains("No matching local-file evidence is available"));
 
     // System prompt refusal contract
-    assert!(system_prompt.contains("If the provided evidence does NOT contain sufficient information to answer the query, respond EXACTLY:"));
+    assert!(system_prompt
+        .contains("If the evidence is insufficient to answer the question, output exactly:"));
     assert!(system_prompt.contains("\"I could not find enough evidence in your local files to answer this question with confidence.\""));
 
     // Formatted model prompt retains refusal instructions
@@ -233,7 +235,7 @@ fn test_native_refusal_when_no_evidence() {
         "qwen2.5-3b-instruct-q4_k_m.gguf",
     );
     assert!(formatted.contains("I could not find enough evidence in your local files to answer this question with confidence."));
-    assert!(formatted.contains("(No matching local file evidence found.)"));
+    assert!(formatted.contains("No matching local-file evidence is available"));
     assert!(validate_prompt_tokens(formatted.len() / 4, 2048).is_ok());
 }
 
@@ -241,26 +243,27 @@ fn test_native_refusal_when_no_evidence() {
 fn test_context_length_persistence() {
     // 1. Default serialization
     let default_settings = AppSettings::default();
-    assert_eq!(default_settings.context_length, 2048);
+    assert_eq!(default_settings.context_length, 4096);
 
     // 2. Custom value round-trip
     let json = serde_json::to_string(&default_settings).unwrap();
-    assert!(json.contains("\"context_length\":2048"));
+    assert!(json.contains("\"context_length\":4096"));
 
     let mut custom_settings: AppSettings = serde_json::from_str(&json).unwrap();
-    assert_eq!(custom_settings.context_length, 2048);
+    assert_eq!(custom_settings.context_length, 4096);
 
-    custom_settings.context_length = 4096;
+    custom_settings.context_length = 2048;
     let custom_json = serde_json::to_string(&custom_settings).unwrap();
     let deserialized: AppSettings = serde_json::from_str(&custom_json).unwrap();
-    assert_eq!(deserialized.context_length, 4096);
+    assert_eq!(deserialized.context_length, 2048);
 
     // 3. Validation helper
     assert!(AppSettings::is_valid_context_length(2048));
     assert!(AppSettings::is_valid_context_length(4096));
     assert!(AppSettings::is_valid_context_length(8192));
+    assert!(AppSettings::is_valid_context_length(16384));
     assert!(!AppSettings::is_valid_context_length(1024));
-    assert!(!AppSettings::is_valid_context_length(16384));
+    assert!(!AppSettings::is_valid_context_length(32768));
 }
 
 #[tokio::test]

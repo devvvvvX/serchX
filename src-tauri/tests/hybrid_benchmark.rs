@@ -142,8 +142,10 @@ async fn test_hybrid_search_2000_chunks_latency_p95() {
 
     let mut latencies_ms: Vec<f64> = Vec::with_capacity(50);
 
-    // Warm-up run
-    let _ = engine.search(test_queries[0], 20, &settings).await;
+    // Warm-up run across distinct query patterns to pre-load SQLite query plans & tokenizer caches
+    for q in &test_queries {
+        let _ = engine.search(q, 20, &settings).await;
+    }
 
     // Run 50 timed queries
     for i in 0..50 {

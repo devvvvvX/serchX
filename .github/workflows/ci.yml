@@ -10,7 +10,7 @@ on:
 
 # Only one run per branch/tag at a time; cancel the older one on new push.
 concurrency:
-  group: serchx-${{ github.workflow }}-${{ github.ref }}
+  group: serchx-${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -51,23 +51,22 @@ jobs:
         working-directory: src-tauri
         run: cargo fmt --all -- --check
 
+      # Run Clippy before tests for fast feedback on compiler/lint issues
+      - name: Run Clippy
+        working-directory: src-tauri
+        run: cargo clippy --locked --all-targets -- -D warnings
+
       - name: Run tests
         working-directory: src-tauri
         # --locked enforces the committed Cargo.lock (already tracked in git)
         run: cargo test --locked
 
-      - name: Run Clippy
-        working-directory: src-tauri
-        run: cargo clippy --locked --all-targets -- -D warnings
-
 # ─────────────────────────────────────────────────────────────────────────────
-# JOB 2 – Build unsigned macOS app + DMG (skipped on PRs)
+# JOB 2 – Build unsigned macOS app + DMG
 # ─────────────────────────────────────────────────────────────────────────────
   build:
     name: Build macOS app & DMG
     needs: test
-    # Only run on pushes to main or version tags — not on PRs
-    if: github.event_name != 'pull_request'
     runs-on: macos-latest
     timeout-minutes: 90
 
@@ -89,14 +88,14 @@ jobs:
             brew install cmake
           fi
 
-      # Install Tauri CLI through cargo to match the local toolchain
+      # Install pre-compiled Tauri CLI binary via npm for fast setup (avoids compiling CLI from source)
       - name: Install Tauri CLI
-        run: cargo install tauri-cli --locked
+        run: npm install -g @tauri-apps/cli
 
       - name: Build app and DMG
         working-directory: src-tauri
         # Targets declared in tauri.conf.json bundle.targets are ["app","dmg"]
-        run: cargo tauri build --bundles app,dmg
+        run: tauri build --bundles app,dmg
 
       # Zip the .app (GitHub Artifacts can't store raw directories)
       - name: Package artefacts for upload
