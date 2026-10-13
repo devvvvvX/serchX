@@ -299,6 +299,48 @@ impl DatabaseManager {
         Ok(())
     }
 
+    pub fn get_unembedded_chunks(&self, limit: usize) -> Result<Vec<DocumentChunk>, DbError> {
+        let conn = self.lock_conn()?;
+        let mut stmt = conn.prepare(
+            r#"
+            SELECT c.id, c.version_id, c.chunk_index, c.content
+            FROM chunks c
+            LEFT JOIN chunk_vectors cv ON c.id = cv.chunk_id
+            WHERE cv.chunk_id IS NULL
+            LIMIT ?1
+            "#,
+        )?;
+        let rows = stmt.query_map(params![limit as i64], |row| {
+            Ok(DocumentChunk {
+                id: row.get(0)?,
+                version_id: row.get(1)?,
+                chunk_index: row.get(2)?,
+                content: row.get(3)?,
+            })
+        })?;
+
+        let mut chunks = Vec::new();
+        for r in rows {
+            chunks.push(r?);
+        }
+        Ok(chunks)
+    }
+
+    pub fn count_unembedded_chunks(&self) -> Result<usize, DbError> {
+        let conn = self.lock_conn()?;
+        let count: i64 = conn.query_row(
+            r#"
+            SELECT COUNT(*)
+            FROM chunks c
+            LEFT JOIN chunk_vectors cv ON c.id = cv.chunk_id
+            WHERE cv.chunk_id IS NULL
+            "#,
+            [],
+            |r| r.get(0),
+        )?;
+        Ok(count as usize)
+    }
+
     pub fn persist_ingestion_batch(&self, items: &[IngestionBatchItem]) -> Result<(), DbError> {
         if items.is_empty() {
             return Ok(());

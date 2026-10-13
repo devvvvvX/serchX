@@ -179,29 +179,45 @@ impl HybridSearchEngine {
 
         // 2. Vector kNN Search Execution
         if settings.semantic_search_enabled {
-            if let Ok(model) = self.scheduler.get_model().await {
-                if let Ok(query_vec) = model.embed_text(&parsed.clean_text) {
-                    if let Ok(vec_results) = self.vector_index.search_knn(&query_vec, limit * 2) {
-                        for (idx, (chunk_id, sim)) in vec_results.into_iter().enumerate() {
-                            let entry = candidates.entry(chunk_id.clone()).or_insert_with(|| {
-                                CandidateAccumulator {
-                                    chunk_id: chunk_id.clone(),
-                                    artifact_id: String::new(),
-                                    version_id: String::new(),
-                                    path: String::new(),
-                                    snippet: String::new(),
-                                    modified_at: 0,
-                                    is_pinned: false,
-                                    fts_rank: None,
-                                    vector_rank: None,
-                                    vector_sim: None,
-                                    matched_exact_terms: Vec::new(),
-                                }
-                            });
-                            entry.vector_rank = Some(idx + 1);
-                            entry.vector_sim = Some(sim);
+            match self.scheduler.get_model().await {
+                Ok(model) => match model.embed_text(&parsed.clean_text) {
+                    Ok(query_vec) => match self.vector_index.search_knn(&query_vec, limit * 2) {
+                        Ok(vec_results) => {
+                            tracing::debug!(
+                                "search: vector kNN returned {} candidates for '{}'",
+                                vec_results.len(),
+                                parsed.clean_text
+                            );
+                            for (idx, (chunk_id, sim)) in vec_results.into_iter().enumerate() {
+                                let entry = candidates.entry(chunk_id.clone()).or_insert_with(|| {
+                                    CandidateAccumulator {
+                                        chunk_id: chunk_id.clone(),
+                                        artifact_id: String::new(),
+                                        version_id: String::new(),
+                                        path: String::new(),
+                                        snippet: String::new(),
+                                        modified_at: 0,
+                                        is_pinned: false,
+                                        fts_rank: None,
+                                        vector_rank: None,
+                                        vector_sim: None,
+                                        matched_exact_terms: Vec::new(),
+                                    }
+                                });
+                                entry.vector_rank = Some(idx + 1);
+                                entry.vector_sim = Some(sim);
+                            }
                         }
+                        Err(e) => {
+                            tracing::warn!("search: vector_index search_knn error: {:?}", e);
+                        }
+                    },
+                    Err(e) => {
+                        tracing::warn!("search: failed to generate query embedding: {:?}", e);
                     }
+                },
+                Err(e) => {
+                    tracing::warn!("search: scheduler failed to get embedding model: {:?}", e);
                 }
             }
         }

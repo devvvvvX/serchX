@@ -14,8 +14,12 @@ pub struct ModelScheduler {
 
 impl ModelScheduler {
     pub fn new(idle_timeout_secs: i64) -> Self {
-        Self::with_factory(idle_timeout_secs, || {
-            let embedder = FastEmbedder::try_new()?;
+        Self::with_cache_dir(idle_timeout_secs, None)
+    }
+
+    pub fn with_cache_dir(idle_timeout_secs: i64, cache_dir: Option<std::path::PathBuf>) -> Self {
+        Self::with_factory(idle_timeout_secs, move || {
+            let embedder = FastEmbedder::try_new_with_cache_dir(cache_dir.clone())?;
             Ok(Arc::new(embedder) as Arc<dyn Embedder>)
         })
     }

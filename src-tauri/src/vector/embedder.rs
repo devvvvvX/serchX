@@ -26,17 +26,46 @@ pub struct FastEmbedder {
 
 impl FastEmbedder {
     pub fn try_new() -> Result<Self, EmbedError> {
-        Self::try_new_with_model(EmbeddingModel::AllMiniLML6V2)
+        Self::try_new_with_cache_dir(None)
+    }
+
+    pub fn try_new_with_cache_dir(
+        cache_dir: Option<std::path::PathBuf>,
+    ) -> Result<Self, EmbedError> {
+        Self::try_new_with_model_and_cache(EmbeddingModel::AllMiniLML6V2, cache_dir)
     }
 
     pub fn try_new_with_model(model_type: EmbeddingModel) -> Result<Self, EmbedError> {
+        Self::try_new_with_model_and_cache(model_type, None)
+    }
+
+    pub fn try_new_with_model_and_cache(
+        model_type: EmbeddingModel,
+        cache_dir: Option<std::path::PathBuf>,
+    ) -> Result<Self, EmbedError> {
         let (name, dim) = match model_type {
             EmbeddingModel::AllMiniLML6V2 => ("AllMiniLML6V2".to_string(), 384),
             EmbeddingModel::NomicEmbedTextV15 => ("NomicEmbedTextV15".to_string(), 768),
             _ => ("Custom".to_string(), 384),
         };
 
-        let options = InitOptions::new(model_type);
+        let resolved_cache_dir = cache_dir.or_else(|| {
+            std::env::var("FASTEMBED_CACHE_DIR")
+                .ok()
+                .map(std::path::PathBuf::from)
+                .or_else(|| {
+                    dirs::cache_dir().map(|p| p.join("serchx").join("models").join("fastembed"))
+                })
+        });
+
+        let mut options = InitOptions::new(model_type);
+        if let Some(ref dir) = resolved_cache_dir {
+            if let Err(e) = std::fs::create_dir_all(dir) {
+                tracing::warn!("FastEmbedder: failed to create cache_dir {:?}: {:?}", dir, e);
+            }
+            options = options.with_cache_dir(dir.clone());
+        }
+
         let model =
             TextEmbedding::try_new(options).map_err(|e| EmbedError::ModelLoad(e.to_string()))?;
 

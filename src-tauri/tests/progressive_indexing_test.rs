@@ -125,3 +125,74 @@ fn test_two_stage_progressive_indexing() {
         "KNN search should return the background-embedded chunk"
     );
 }
+
+#[test]
+fn test_background_vector_backfill_existing_chunks() {
+    let dir = tempdir().unwrap();
+    let db_path = dir.path().join("test_backfill.db");
+    let db = Arc::new(DatabaseManager::new(&db_path).unwrap());
+
+    // 1. Manually insert artifacts and chunks without vector embeddings
+    let art = db.upsert_artifact("/test/doc.txt", "file").unwrap();
+    let ver = serchx_lib::models::ArtifactVersion {
+        id: "v1".to_string(),
+        artifact_id: art.id.clone(),
+        path: "/test/doc.txt".to_string(),
+        content_hash: "h1".to_string(),
+        text_hash: Some("th1".to_string()),
+        size_bytes: 100,
+        modified_at: 1000,
+        previous_version_id: None,
+        extracted_text: None,
+        is_pinned: false,
+    };
+    db.record_version(&ver).unwrap();
+    let chunks = vec![
+        serchx_lib::models::DocumentChunk {
+            id: "c1".to_string(),
+            version_id: "v1".to_string(),
+            chunk_index: 0,
+            content: "Artificial intelligence for desktop search".to_string(),
+        },
+        serchx_lib::models::DocumentChunk {
+            id: "c2".to_string(),
+            version_id: "v1".to_string(),
+            chunk_index: 1,
+            content: "Semantic embeddings enable conceptual querying".to_string(),
+        },
+    ];
+    db.insert_chunks(&chunks).unwrap();
+
+    // Verify chunk_vectors is 0 initially and unembedded count is 2
+    assert_eq!(db.count_unembedded_chunks().unwrap(), 2);
+
+    let vindex: Arc<dyn VectorIndex> = Arc::new(SqliteVectorIndex::new(db.clone()));
+    let embedder: Arc<dyn Embedder> = Arc::new(MockEmbedder::new(384));
+
+    // 2. Start IngestionPipeline with vector support
+    let _pipeline = IngestionPipeline::with_vector_support(
+        db.clone(),
+        Arc::new(ExtractorRegistry::new()),
+        Arc::new(AppleVisionOcr::new()),
+        Arc::new(FileFilter::default()),
+        Some(vindex.clone()),
+        Some(embedder.clone()),
+    );
+
+    // 3. Background worker should detect the 2 unembedded chunks and backfill them
+    let start_wait = Instant::now();
+    let mut vector_count = 0;
+    while start_wait.elapsed() < Duration::from_secs(3) {
+        vector_count = vindex.count_vectors().unwrap_or(0);
+        if vector_count == 2 {
+            break;
+        }
+        std::thread::sleep(Duration::from_millis(50));
+    }
+
+    assert_eq!(
+        vector_count, 2,
+        "Background worker must automatically backfill existing chunks missing from chunk_vectors"
+    );
+    assert_eq!(db.count_unembedded_chunks().unwrap(), 0);
+}

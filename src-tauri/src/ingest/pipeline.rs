@@ -26,7 +26,7 @@ pub struct IngestionPipeline {
     filter: Arc<crate::safety::FileFilter>,
     vector_index: Option<Arc<dyn crate::vector::VectorIndex>>,
     embedder: Option<Arc<dyn crate::vector::Embedder>>,
-    bg_embedding_tx: Option<std::sync::mpsc::SyncSender<Vec<DocumentChunk>>>,
+    bg_embedding_tx: Option<std::sync::mpsc::Sender<Vec<DocumentChunk>>>,
 }
 
 impl IngestionPipeline {
@@ -69,24 +69,85 @@ impl IngestionPipeline {
         embedder: Option<Arc<dyn crate::vector::Embedder>>,
     ) -> Self {
         let bg_embedding_tx = if let (Some(vindex), Some(emb)) = (&vector_index, &embedder) {
-            let (tx, rx) = std::sync::mpsc::sync_channel::<Vec<DocumentChunk>>(512);
+            let (tx, rx) = std::sync::mpsc::channel::<Vec<DocumentChunk>>();
+            let db_bg = db.clone();
             let vindex_bg = vindex.clone();
             let emb_bg = emb.clone();
             let _ = std::thread::Builder::new()
                 .name("serchx-bg-embedder".to_string())
                 .spawn(move || {
-                    while let Ok(chunks) = rx.recv() {
-                        for chunk_batch in chunks.chunks(32) {
-                            let texts: Vec<String> =
-                                chunk_batch.iter().map(|c| c.content.clone()).collect();
-                            if let Ok(embeddings) = emb_bg.embed_batch(&texts) {
-                                let batch_items: Vec<(&str, &[f32])> = chunk_batch
-                                    .iter()
-                                    .zip(embeddings.iter())
-                                    .map(|(c, e)| (c.id.as_str(), e.as_slice()))
-                                    .collect();
-                                let _ = vindex_bg.insert_vectors_batch(&batch_items);
+                    tracing::info!("serchx-bg-embedder: background embedding worker thread started");
+                    let mut total_embedded = 0;
+                    loop {
+                        let mut did_work = false;
+
+                        // 1. Drain incoming live chunks from channel
+                        while let Ok(chunks) = rx.try_recv() {
+                            did_work = true;
+                            Self::process_chunks_for_embedding(
+                                &chunks,
+                                &emb_bg,
+                                &vindex_bg,
+                                &mut total_embedded,
+                            );
+                        }
+
+                        // 2. If no live chunks, check database for unembedded chunks (backfill)
+                        let max_vector_chunks = db_bg
+                            .get_app_settings()
+                            .map(|s| s.max_vector_chunks)
+                            .unwrap_or(250_000);
+                        let current_vectors = vindex_bg.count_vectors().unwrap_or(0);
+
+                        if current_vectors < max_vector_chunks {
+                            let batch_limit = std::cmp::min(
+                                128,
+                                max_vector_chunks.saturating_sub(current_vectors),
+                            );
+                            match db_bg.get_unembedded_chunks(batch_limit) {
+                                Ok(unembedded) if !unembedded.is_empty() => {
+                                    did_work = true;
+                                    Self::process_chunks_for_embedding(
+                                        &unembedded,
+                                        &emb_bg,
+                                        &vindex_bg,
+                                        &mut total_embedded,
+                                    );
+                                }
+                                Ok(_) => {}
+                                Err(e) => {
+                                    tracing::warn!(
+                                        "serchx-bg-embedder: failed to query unembedded chunks: {:?}",
+                                        e
+                                    );
+                                }
                             }
+                        }
+
+                        if !did_work {
+                            // Wait up to 3 seconds for new live chunks before checking DB again
+                            match rx.recv_timeout(std::time::Duration::from_secs(3)) {
+                                Ok(chunks) => {
+                                    Self::process_chunks_for_embedding(
+                                        &chunks,
+                                        &emb_bg,
+                                        &vindex_bg,
+                                        &mut total_embedded,
+                                    );
+                                }
+                                Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
+                                    // Timeout reached, loop will re-check DB backfill
+                                }
+                                Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
+                                    tracing::info!(
+                                        "serchx-bg-embedder: channel disconnected, shutting down worker"
+                                    );
+                                    break;
+                                }
+                            }
+                        } else {
+                            // Yield briefly to avoid hogging CPU during heavy backfills
+                            std::thread::sleep(std::time::Duration::from_millis(15));
                         }
                     }
                 });
@@ -106,6 +167,46 @@ impl IngestionPipeline {
         }
     }
 
+    fn process_chunks_for_embedding(
+        chunks: &[DocumentChunk],
+        emb: &Arc<dyn crate::vector::Embedder>,
+        vindex: &Arc<dyn crate::vector::VectorIndex>,
+        total_embedded: &mut usize,
+    ) {
+        if chunks.is_empty() {
+            return;
+        }
+        for chunk_batch in chunks.chunks(32) {
+            let texts: Vec<String> = chunk_batch.iter().map(|c| c.content.clone()).collect();
+            match emb.embed_batch(&texts) {
+                Ok(embeddings) => {
+                    let batch_items: Vec<(&str, &[f32])> = chunk_batch
+                        .iter()
+                        .zip(embeddings.iter())
+                        .map(|(c, e)| (c.id.as_str(), e.as_slice()))
+                        .collect();
+                    if let Err(e) = vindex.insert_vectors_batch(&batch_items) {
+                        tracing::error!("serchx-bg-embedder: failed to insert vector batch: {:?}", e);
+                    } else {
+                        *total_embedded += batch_items.len();
+                        if *total_embedded % 256 == 0 {
+                            tracing::info!(
+                                "serchx-bg-embedder: successfully embedded {} chunks",
+                                *total_embedded
+                            );
+                        }
+                    }
+                }
+                Err(e) => {
+                    tracing::error!(
+                        "serchx-bg-embedder: failed to generate embeddings for batch: {:?}",
+                        e
+                    );
+                }
+            }
+        }
+    }
+
     pub fn enqueue_for_background_embedding(&self, chunks: &[DocumentChunk]) {
         if let Some(ref bg_tx) = self.bg_embedding_tx {
             let vector_chunks: Vec<_> = chunks
@@ -113,7 +214,7 @@ impl IngestionPipeline {
                 .take(MAX_VECTOR_CHUNKS_PER_DOC)
                 .cloned()
                 .collect();
-            let _ = bg_tx.try_send(vector_chunks);
+            let _ = bg_tx.send(vector_chunks);
         }
     }
 

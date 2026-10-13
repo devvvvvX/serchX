@@ -80,10 +80,24 @@ pub fn run() {
 
             let fts = Arc::new(crate::search::Fts5SearchEngine::new(db.clone()));
             let vector_index = Arc::new(crate::vector::SqliteVectorIndex::new(db.clone()));
+            let models_cache_dir = app_data_dir.join("models").join("fastembed");
+            let _ = std::fs::create_dir_all(&models_cache_dir);
+
             let embedder: Option<Arc<dyn crate::vector::Embedder>> =
-                crate::vector::FastEmbedder::try_new()
-                    .ok()
-                    .map(|e| Arc::new(e) as Arc<dyn crate::vector::Embedder>);
+                match crate::vector::FastEmbedder::try_new_with_cache_dir(Some(models_cache_dir.clone())) {
+                    Ok(e) => {
+                        tracing::info!("FastEmbedder successfully initialized at {:?}", models_cache_dir);
+                        Some(Arc::new(e) as Arc<dyn crate::vector::Embedder>)
+                    }
+                    Err(err) => {
+                        tracing::error!(
+                            "Failed to initialize FastEmbedder at {:?}: {:?}",
+                            models_cache_dir,
+                            err
+                        );
+                        None
+                    }
+                };
 
             let extractors = Arc::new(ExtractorRegistry::new());
             let ocr = Arc::new(AppleVisionOcr::new());
@@ -108,7 +122,10 @@ pub fn run() {
                 coordinator.clone(),
             ));
 
-            let scheduler = Arc::new(crate::vector::ModelScheduler::new(60));
+            let scheduler = Arc::new(crate::vector::ModelScheduler::with_cache_dir(
+                60,
+                Some(models_cache_dir.clone()),
+            ));
             let diff_engine = Arc::new(crate::diff::DiffEngine::new());
             let diff_cache = Arc::new(crate::diff::DiffCache::default());
             let hybrid_engine = Arc::new(crate::search::HybridSearchEngine::with_diff_support(

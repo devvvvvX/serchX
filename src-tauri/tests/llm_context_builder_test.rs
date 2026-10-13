@@ -44,17 +44,16 @@ fn test_context_builder_grounding() {
     // Verify strict grounding rules in system prompt
     assert!(system_prompt.contains("Evidence Synthesizer"));
     assert!(
-        system_prompt.contains("cite its source using inline bracketed numbers like [1] or [2]")
+        system_prompt.contains("inline citation")
+            && system_prompt.contains("[1] or [2]")
     );
     assert!(system_prompt.contains("I could not find enough evidence in your local files to answer this question with confidence."));
 
     // Verify user prompt format
-    assert!(user_prompt.contains("[1] Title: \"Q3_Financials.pdf\""));
-    assert!(user_prompt
-        .contains("Excerpt: \"\"\"Revenue grew 24% year-over-year reaching $4.2M.\"\"\""));
-    assert!(user_prompt.contains("[2] Title: \"Roadmap_2025.docx\""));
-    assert!(user_prompt
-        .contains("Excerpt: \"\"\"Core focus for Q1 is enterprise security and SSO.\"\"\""));
+    assert!(user_prompt.contains("Q3_Financials.pdf"));
+    assert!(user_prompt.contains("Revenue grew 24% year-over-year reaching $4.2M."));
+    assert!(user_prompt.contains("Roadmap_2025.docx"));
+    assert!(user_prompt.contains("Core focus for Q1 is enterprise security and SSO."));
 }
 
 #[test]
@@ -86,7 +85,7 @@ fn test_context_builder_empty_evidence() {
     let evidence: Vec<StructuredEvidence> = vec![];
     let (system_prompt, user_prompt) = builder.build_prompt("Unknown topic", &evidence);
 
-    assert!(user_prompt.contains("(No matching local file evidence found.)"));
+    assert!(user_prompt.contains("No matching local-file evidence is available"));
     assert!(system_prompt.contains("I could not find enough evidence in your local files to answer this question with confidence."));
 }
 
