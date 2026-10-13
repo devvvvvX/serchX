@@ -84,9 +84,14 @@ pub fn run() {
             let _ = std::fs::create_dir_all(&models_cache_dir);
 
             let embedder: Option<Arc<dyn crate::vector::Embedder>> =
-                match crate::vector::FastEmbedder::try_new_with_cache_dir(Some(models_cache_dir.clone())) {
+                match crate::vector::FastEmbedder::try_new_with_cache_dir(Some(
+                    models_cache_dir.clone(),
+                )) {
                     Ok(e) => {
-                        tracing::info!("FastEmbedder successfully initialized at {:?}", models_cache_dir);
+                        tracing::info!(
+                            "FastEmbedder successfully initialized at {:?}",
+                            models_cache_dir
+                        );
                         Some(Arc::new(e) as Arc<dyn crate::vector::Embedder>)
                     }
                     Err(err) => {

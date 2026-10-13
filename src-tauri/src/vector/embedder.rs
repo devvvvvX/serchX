@@ -61,7 +61,11 @@ impl FastEmbedder {
         let mut options = InitOptions::new(model_type);
         if let Some(ref dir) = resolved_cache_dir {
             if let Err(e) = std::fs::create_dir_all(dir) {
-                tracing::warn!("FastEmbedder: failed to create cache_dir {:?}: {:?}", dir, e);
+                tracing::warn!(
+                    "FastEmbedder: failed to create cache_dir {:?}: {:?}",
+                    dir,
+                    e
+                );
             }
             options = options.with_cache_dir(dir.clone());
         }

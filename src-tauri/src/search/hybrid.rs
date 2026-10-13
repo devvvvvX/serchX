@@ -189,21 +189,22 @@ impl HybridSearchEngine {
                                 parsed.clean_text
                             );
                             for (idx, (chunk_id, sim)) in vec_results.into_iter().enumerate() {
-                                let entry = candidates.entry(chunk_id.clone()).or_insert_with(|| {
-                                    CandidateAccumulator {
-                                        chunk_id: chunk_id.clone(),
-                                        artifact_id: String::new(),
-                                        version_id: String::new(),
-                                        path: String::new(),
-                                        snippet: String::new(),
-                                        modified_at: 0,
-                                        is_pinned: false,
-                                        fts_rank: None,
-                                        vector_rank: None,
-                                        vector_sim: None,
-                                        matched_exact_terms: Vec::new(),
-                                    }
-                                });
+                                let entry =
+                                    candidates.entry(chunk_id.clone()).or_insert_with(|| {
+                                        CandidateAccumulator {
+                                            chunk_id: chunk_id.clone(),
+                                            artifact_id: String::new(),
+                                            version_id: String::new(),
+                                            path: String::new(),
+                                            snippet: String::new(),
+                                            modified_at: 0,
+                                            is_pinned: false,
+                                            fts_rank: None,
+                                            vector_rank: None,
+                                            vector_sim: None,
+                                            matched_exact_terms: Vec::new(),
+                                        }
+                                    });
                                 entry.vector_rank = Some(idx + 1);
                                 entry.vector_sim = Some(sim);
                             }

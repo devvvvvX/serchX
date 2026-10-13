@@ -186,7 +186,10 @@ impl IngestionPipeline {
                         .map(|(c, e)| (c.id.as_str(), e.as_slice()))
                         .collect();
                     if let Err(e) = vindex.insert_vectors_batch(&batch_items) {
-                        tracing::error!("serchx-bg-embedder: failed to insert vector batch: {:?}", e);
+                        tracing::error!(
+                            "serchx-bg-embedder: failed to insert vector batch: {:?}",
+                            e
+                        );
                     } else {
                         *total_embedded += batch_items.len();
                         if *total_embedded % 256 == 0 {

@@ -43,10 +43,7 @@ fn test_context_builder_grounding() {
 
     // Verify strict grounding rules in system prompt
     assert!(system_prompt.contains("Evidence Synthesizer"));
-    assert!(
-        system_prompt.contains("inline citation")
-            && system_prompt.contains("[1] or [2]")
-    );
+    assert!(system_prompt.contains("inline citation") && system_prompt.contains("[1] or [2]"));
     assert!(system_prompt.contains("I could not find enough evidence in your local files to answer this question with confidence."));
 
     // Verify user prompt format
